@@ -1,0 +1,17 @@
+# Secrets
+.env
+*.env
+backend/.env
+serviceAccountKey.json
+backend/serviceAccountKey.json
+
+# Dependencies
+node_modules/
+__pycache__/
+
+.env
+*.env
+backend/.env
+serviceAccountKey.json
+backend/serviceAccountKey.json
+my-assistant-projecy-firebase-adminsdk-fbsvc-6f468c99bf.json
