@@ -1,0 +1,138 @@
+/* Global */
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #060b12, #0c101a);
+    color: white;
+}
+
+/* Navbar */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 50px;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: rgba(5, 10, 20, 0.7);
+    backdrop-filter: blur(6px);
+}
+
+.logo {
+    font-size: 1.5rem;
+    color: #00eaff;
+    font-weight: 600;
+}
+
+nav a {
+    margin-left: 30px;
+    text-decoration: none;
+    color: #f1f1f1;
+    font-size: 1rem;
+}
+
+nav a:hover {
+    color: #00eaff;
+}
+
+/* HERO SECTION */
+.hero-section {
+    margin-top: 120px;
+    padding: 80px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.hero-left h1 {
+    font-size: 3.2rem;
+    margin-bottom: 15px;
+}
+
+.hero-left p {
+    font-size: 1.2rem;
+    color: #ddd;
+    margin-bottom: 25px;
+}
+
+/* Button */
+.primary-btn {
+    padding: 12px 28px;
+    background: #00eaff;
+    color: #000;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.primary-btn:hover {
+    background: #00ffff;
+}
+
+/* Glowing Orb */
+.hero-orb {
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, #00eaff 0%, #006680 60%, #002233 100%);
+    border-radius: 50%;
+    filter: blur(0px);
+    box-shadow: 0 0 50px #00eaffaa, 0 0 150px #00eaff55;
+}
+
+/* Capabilities */
+.cap-section {
+    padding: 80px 60px;
+    text-align: center;
+}
+
+.cap-grid {
+    margin-top: 40px;
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.cap-card {
+    padding: 25px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    border: 1px solid #00eaff33;
+    text-align: center;
+}
+
+/* Dashboard Buttons */
+.dash-section {
+    padding: 80px 60px;
+    text-align: center;
+}
+
+.dash-buttons {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.dash-btn {
+    padding: 16px 30px;
+    background: rgba(0, 234, 255, 0.12);
+    border: 1px solid #00eaff70;
+    border-radius: 10px;
+    color: #00eaff;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.dash-btn:hover {
+    background: #00eaff;
+    color: #000;
+    transform: translateY(-5px);
+    box-shadow: 0 0 25px #00eaffaa;
+}
+
+/* Footer */
+.footer {
+    padding: 30px;
+    text-align: center;
+    color: #aaa;
+}

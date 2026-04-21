@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mitra AI — Finance Dashboard with Analytics</title>
+<script src="api.js"></script>
+
+<style>
+body{
+  margin:0;
+  background: url("https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?auto=format&fit=crop&w=1600&q=80") no-repeat center center fixed;
+  background-size: cover;
+  font-family: "Poppins",sans-serif;
+  color:#fff;
+}
+body::before{content:"";position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(2px);z-index:-1}
+
+.header{display:flex;align-items:center;gap:12px;padding:18px;max-width:1200px;margin:20px auto;
+  background:rgba(0,0,0,0.4);backdrop-filter:blur(10px);border-radius:16px;border:1px solid rgba(0,255,204,0.2)}
+.h-title{flex:1;font-size:1.6rem;color:#00ffcc;font-weight:700}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{padding:10px 16px;border-radius:10px;border:0;cursor:pointer;font-weight:700;transition:transform 0.2s}
+.btn:hover{transform:translateY(-2px)}
+.btn-voice{background:#00ffcc;color:#021208}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.15);color:#eafaff}
+.btn-danger{background:linear-gradient(180deg,#ff6b6b,#ee5a6f);color:white}
+.muted{color:rgba(220,255,255,0.7);font-size:0.95rem}
+
+.container{max-width:1200px;margin:10px auto;padding:0 18px}
+.tabs{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.tab{padding:12px 24px;background:rgba(0,255,204,0.1);border:1px solid rgba(0,255,204,0.3);border-radius:12px;cursor:pointer;transition:0.3s}
+.tab.active{background:#00ffcc;color:#000}
+
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+.card{background:rgba(0,255,180,0.06);border:1px solid rgba(0,255,180,0.12);padding:18px;border-radius:12px;backdrop-filter:blur(6px);margin-bottom:20px}
+.card h3{margin:0 0 15px 0;color:#00ffcc}
+
+.ai-section{
+  background:rgba(0,255,204,0.12);
+  padding:20px;
+  border-radius:12px;
+  border:1px solid rgba(0,255,204,0.3);
+  margin-bottom:20px;
+}
+.input-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.input-row input{flex:1;min-width:150px;padding:10px;border-radius:8px;border:none;background:rgba(0,0,0,0.35);color:#fff;outline:none}
+.ai-response{
+  background:rgba(0,0,0,0.5);
+  padding:12px;
+  border-radius:8px;
+  color:#00ffcc;
+  font-family:'Courier New',monospace;
+  font-size:14px;
+  min-height:60px;
+  margin-top:10px;
+}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}
+.stat-card{background:rgba(0,0,0,0.4);padding:20px;border-radius:12px;text-align:center;border:1px solid rgba(0,255,204,0.2)}
+.stat-card .label{font-size:0.85rem;color:#a0e0d0;margin-bottom:8px}
+.stat-card .value{font-size:2rem;font-weight:700;color:#00ffcc}
+
+.list{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.item{background:rgba(0,0,0,0.35);padding:12px;border-radius:8px;border-left:4px solid #00ffcc;display:flex;justify-content:space-between;align-items:center}
+.item.expense{border-left-color:#ff6b6b}
+.item.income{border-left-color:#4dff4d}
+
+.item-actions{display:flex;gap:8px}
+.del{background:none;border:0;color:#ff7b7b;font-size:1.1rem;cursor:pointer;padding:5px 10px}
+.del:hover{color:#ff4d4d}
+
+.export-section{margin-top:20px;padding:15px;background:rgba(0,255,204,0.08);border-radius:10px}
+.export-btns{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+
+.period-selector{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap}
+.period-btn{padding:8px 16px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,255,204,0.3);border-radius:8px;cursor:pointer;transition:0.3s}
+.period-btn.active{background:rgba(0,255,204,0.3);border-color:#00ffcc}
+
+@media(max-width:800px){.container{padding:0 10px}.stats-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="h-title">💰 Mitra AI — Finance Analytics</div>
+  <div class="controls">
+    <span id="status" class="muted">Status: <span id="statusText">Idle</span></span>
+    <button id="startMic" class="btn btn-voice">🎙️ Voice</button>
+    <button id="stopMic" class="btn btn-ghost">Stop</button>
+    <a href="index.html"><button class="btn btn-ghost">← Home</button></a>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('log')">📝 Log Transactions</div>
+    <div class="tab" onclick="switchTab('analytics')">📊 Analytics</div>
+    <div class="tab" onclick="switchTab('export')">📤 Export</div>
+  </div>
+
+  <!-- Log Tab -->
+  <div class="tab-content active" id="log-tab">
+    <div class="card">
+      <h3>🤖 AI Finance Commands</h3>
+      <div class="ai-section">
+        <div class="input-row">
+          <input id="aiInput" placeholder='Say: "Spent 500 on groceries" or "Earned 2000 from freelancing"'>
+          <button id="aiSend" class="btn btn-voice">Send</button>
+        </div>
+        <div class="muted" style="margin-top:8px">
+          Natural language: "spent 250 on lunch", "earned 5000 salary"
+        </div>
+        <div id="aiResponse" class="ai-response">
+          Try: "Spent 300 on dinner" or "Earned 1000 from side project"
+        </div>
+      </div>
+
+      <h3 style="margin-top:25px">Recent Transactions</h3>
+      <div class="list" id="finList">
+        <div class="muted">Loading transactions...</div>
+      </div>
+
+
+    </div>
+  </div>
+
+  <!-- Analytics Tab -->
+  <div class="tab-content" id="analytics-tab">
+    <div class="card">
+      <h3>📊 Financial Overview</h3>
+      
+      <div class="period-selector">
+        <div class="period-btn active" onclick="changePeriod('week')">Week</div>
+        <div class="period-btn" onclick="changePeriod('month')">Month</div>
+        <div class="period-btn" onclick="changePeriod('year')">Year</div>
+        <div class="period-btn" onclick="changePeriod('all')">All Time</div>
+      </div>
+
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="label">Total Income</div>
+          <div class="value" id="totalIncome">₹0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Total Expenses</div>
+          <div class="value" id="totalExpense" style="color:#ff6b6b">₹0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Net Balance</div>
+          <div class="value" id="balance">₹0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Transactions</div>
+          <div class="value" id="txCount">0</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px">
+        <h3 style="color:#00ffcc;margin-bottom:15px">Category Breakdown</h3>
+        <div id="categoryBreakdown"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Tab -->
+  <div class="tab-content" id="export-tab">
+    <div class="card">
+      <h3>📤 Export Financial Data</h3>
+      
+      <div class="export-section">
+        <h4 style="color:#00ffcc;margin-bottom:10px">Select Period</h4>
+        <div class="period-selector">
+          <div class="period-btn active" onclick="selectExportPeriod('week')">This Week</div>
+          <div class="period-btn" onclick="selectExportPeriod('month')">This Month</div>
+          <div class="period-btn" onclick="selectExportPeriod('year')">This Year</div>
+          <div class="period-btn" onclick="selectExportPeriod('all')">All Time</div>
+        </div>
+
+        <h4 style="color:#00ffcc;margin:15px 0 10px">Export Format</h4>
+        <div class="export-btns">
+          <button onclick="exportCSV()" class="btn btn-voice">📊 Export as CSV</button>
+          <button onclick="exportJSON()" class="btn btn-ghost">📋 Export as JSON</button>
+          <button onclick="exportText()" class="btn btn-ghost">📄 Export as Text</button>
+        </div>
+
+        <div style="margin-top:20px;padding:15px;background:rgba(255,107,107,0.1);border-radius:8px;border:1px solid rgba(255,107,107,0.3)">
+          <h4 style="color:#ff6b6b;margin-bottom:10px">⚠️ Danger Zone</h4>
+          <p style="font-size:0.9rem;margin-bottom:10px">These actions cannot be undone!</p>
+          <button onclick="clearPeriod()" class="btn btn-danger">🗑️ Clear Selected Period</button>
+          <button onclick="clearAll()" class="btn btn-danger" style="margin-left:10px">💥 Clear All Data</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let recognition = null;
+let isListening = false;
+let entries = [];
+let currentPeriod = 'week';
+let exportPeriod = 'week';
+
+// Load finance data
+async function loadFinance() {
+  try {
+    const response = await fetch('http://localhost:3000/finance');
+    const data = await response.json();
+    entries = data.entries || [];
+    renderFinance();
+    updateAnalytics();
+  } catch (error) {
+    console.error('Error loading finance:', error);
+    entries = []; // Clear entries on error
+    renderFinance();
+    updateAnalytics();
+  }
+}
+
+
+
+
+
+// Render finance entries
+function renderFinance() {
+  const el = $('#finList');
+  
+  if (!entries || entries.length === 0) {
+    el.innerHTML = '<div class="muted">No transactions yet. Use AI to add expenses or income!</div>';
+    return;
+  }
+  
+  el.innerHTML = '';
+  
+  entries.slice(0, 20).forEach(entry => {
+    const date = entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp?._seconds * 1000 || Date.now());
+    const typeEmoji = entry.type === 'income' ? '💰' : '💸';
+    const typeColor = entry.type === 'income' ? '#4dff4d' : '#ff6b6b';
+    
+    const div = document.createElement('div');
+    div.className = `item ${entry.type}`;
+    div.innerHTML = `
+      <div>
+        <strong>${typeEmoji} ${entry.item}</strong>
+        <div class="muted" style="font-size:0.85rem">${entry.category || 'General'} • ${date.toLocaleDateString()}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:1.2rem;font-weight:700;color:${typeColor}">
+          ₹${entry.amount}
+        </div>
+        <div class="item-actions">
+          <button class="del" onclick="deleteEntry('${entry.id}')">🗑️</button>
+        </div>
+      </div>
+    `;
+    el.appendChild(div);
+  });
+}
+
+// Delete entry permanently
+async function deleteEntry(id) {
+  if (!confirm('Permanently delete this transaction? This cannot be undone!')) return;
+  
+  console.log('Attempting to delete entry with ID:', id);
+  
+  try {
+    const response = await fetch(`http://localhost:3000/finance/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('Delete response status:', response.status);
+    
+    if (response.ok) {
+      const result = await response.json();
+      console.log('Delete result:', result);
+      
+      // Remove from local array
+      entries = entries.filter(e => e.id !== id);
+      renderFinance();
+      updateAnalytics();
+      alert('Transaction permanently deleted!');
+    } else {
+      const errorText = await response.text();
+      console.error('Delete failed:', errorText);
+      throw new Error(`Server error: ${response.status} - ${errorText}`);
+    }
+  } catch (error) {
+    console.error('Delete error:', error);
+    alert('Error deleting transaction: ' + error.message + '\n\nCheck console for details.');
+  }
+}
+
+// Update analytics
+function updateAnalytics() {
+  const filtered = filterByPeriod(entries, currentPeriod);
+  
+  let totalIncome = 0;
+  let totalExpense = 0;
+  const categories = {};
+  
+  filtered.forEach(entry => {
+    if (entry.type === 'income') {
+      totalIncome += entry.amount || 0;
+    } else {
+      totalExpense += entry.amount || 0;
+      const cat = entry.category || 'General';
+      categories[cat] = (categories[cat] || 0) + entry.amount;
+    }
+  });
+  
+  $('#totalIncome').textContent = '₹' + totalIncome.toFixed(0);
+  $('#totalExpense').textContent = '₹' + totalExpense.toFixed(0);
+  $('#balance').textContent = '₹' + (totalIncome - totalExpense).toFixed(0);
+  $('#txCount').textContent = filtered.length;
+  
+  const balanceEl = $('#balance');
+  balanceEl.style.color = (totalIncome - totalExpense) >= 0 ? '#4dff4d' : '#ff6b6b';
+  
+  // Category breakdown
+  const categoryEl = document.getElementById('categoryBreakdown');
+  categoryEl.innerHTML = Object.entries(categories)
+    .sort((a, b) => b[1] - a[1])
+    .map(([cat, amount]) => `
+      <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(0,0,0,0.3);border-radius:8px;margin-bottom:8px">
+        <span>${cat}</span>
+        <strong style="color:#ff6b6b">₹${amount.toFixed(0)}</strong>
+      </div>
+    `).join('') || '<div class="muted">No expense categories</div>';
+}
+
+// Filter by period
+function filterByPeriod(data, period) {
+  const now = new Date();
+  const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  
+  return data.filter(entry => {
+    const date = entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp?._seconds * 1000 || 0);
+    
+    switch(period) {
+      case 'week': return date >= startOfWeek;
+      case 'month': return date >= startOfMonth;
+      case 'year': return date >= startOfYear;
+      case 'all': return true;
+      default: return true;
+    }
+  });
+}
+
+// Change period
+function changePeriod(period) {
+  currentPeriod = period;
+  document.querySelectorAll('#analytics-tab .period-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  updateAnalytics();
+}
+
+// Export functions
+function selectExportPeriod(period) {
+  exportPeriod = period;
+  document.querySelectorAll('#export-tab .period-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function exportCSV() {
+  const filtered = filterByPeriod(entries, exportPeriod);
+  let csv = 'Date,Type,Item,Category,Amount\n';
+  
+  filtered.forEach(entry => {
+    const date = entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp?._seconds * 1000 || 0);
+    csv += `${date.toLocaleDateString()},${entry.type},${entry.item},${entry.category || 'General'},${entry.amount}\n`;
+  });
+  
+  downloadFile(`finance_${exportPeriod}.csv`, csv, 'text/csv');
+}
+
+function exportJSON() {
+  const filtered = filterByPeriod(entries, exportPeriod);
+  const json = JSON.stringify(filtered, null, 2);
+  downloadFile(`finance_${exportPeriod}.json`, json, 'application/json');
+}
+
+function exportText() {
+  const filtered = filterByPeriod(entries, exportPeriod);
+  let text = `MITRA AI - Financial Report (${exportPeriod.toUpperCase()})\n`;
+  text += `Generated: ${new Date().toLocaleString()}\n\n`;
+  text += `Total Income: ₹${filtered.filter(e => e.type === 'income').reduce((sum, e) => sum + e.amount, 0)}\n`;
+  text += `Total Expenses: ₹${filtered.filter(e => e.type === 'expense').reduce((sum, e) => sum + e.amount, 0)}\n\n`;
+  text += `TRANSACTIONS:\n${'-'.repeat(50)}\n`;
+  
+  filtered.forEach(entry => {
+    const date = entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp?._seconds * 1000 || 0);
+    text += `${date.toLocaleDateString()} | ${entry.type.toUpperCase()} | ${entry.item} | ₹${entry.amount}\n`;
+  });
+  
+  downloadFile(`finance_${exportPeriod}.txt`, text, 'text/plain');
+}
+
+function downloadFile(filename, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+  alert(`Downloaded: ${filename}`);
+}
+
+// Clear functions
+function clearPeriod() {
+  if (!confirm(`Delete all ${exportPeriod} transactions? This cannot be undone!`)) return;
+  
+  const filtered = filterByPeriod(entries, exportPeriod);
+  if (confirm(`This will delete ${filtered.length} transactions. Are you SURE?`)) {
+    // In real implementation, call DELETE endpoint for each
+    alert(`Would delete ${filtered.length} transactions. (Backend implementation needed)`);
+  }
+}
+
+function clearAll() {
+  if (!confirm('DELETE ALL FINANCIAL DATA? This cannot be undone!')) return;
+  if (!confirm('Are you ABSOLUTELY SURE? All transactions will be permanently deleted!')) return;
+  
+  alert('Would delete all data. (Backend DELETE endpoint needed)');
+}
+
+// Handle AI Commands
+async function handleAICommand(text) {
+  if (!text.trim()) return;
+  
+  const responseEl = $('#aiResponse');
+  responseEl.textContent = '🤔 Processing with AI...';
+  $('#statusText').textContent = 'Thinking...';
+  
+  try {
+    const reply = await window.askAI(text);
+    responseEl.textContent = reply;
+    $('#statusText').textContent = 'Ready';
+    
+    // If transaction logged, refresh the data
+    if (reply.includes('logged') || reply.includes('Logged') || reply.includes('expense') || reply.includes('income')) {
+      setTimeout(() => loadFinance(), 500);
+    }
+  } catch (error) {
+    responseEl.textContent = '❌ Error: ' + error.message;
+    $('#statusText').textContent = 'Error';
+  }
+}
+
+// Voice Recognition
+function initVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    alert('Speech recognition not supported. Use Chrome or Edge.');
+    return null;
+  }
+  
+  recognition = new SR();
+  recognition.lang = 'en-IN';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  
+  recognition.onstart = () => {
+    isListening = true;
+    $('#statusText').textContent = 'Listening...';
+  };
+  
+  recognition.onend = () => {
+    isListening = false;
+    $('#statusText').textContent = 'Idle';
+  };
+  
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    $('#aiInput').value = transcript;
+    handleAICommand(transcript);
+  };
+  
+  return recognition;
+}
+
+// Tab switching
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  
+  event.target.classList.add('active');
+  document.getElementById(tab + '-tab').classList.add('active');
+  
+  if (tab === 'analytics') {
+    updateAnalytics();
+  }
+}
+
+// Event Listeners
+$('#aiSend').onclick = () => handleAICommand($('#aiInput').value);
+$('#aiInput').onkeypress = (e) => {
+  if (e.key === 'Enter') handleAICommand($('#aiInput').value);
+};
+$('#startMic').onclick = () => {
+  if (!recognition) recognition = initVoice();
+  if (recognition && !isListening) recognition.start();
+};
+$('#stopMic').onclick = () => {
+  if (recognition && isListening) recognition.stop();
+};
+
+// Make functions global
+window.switchTab = switchTab;
+window.changePeriod = changePeriod;
+window.selectExportPeriod = selectExportPeriod;
+window.exportCSV = exportCSV;
+window.exportJSON = exportJSON;
+window.exportText = exportText;
+window.clearPeriod = clearPeriod;
+window.clearAll = clearAll;
+window.deleteEntry = deleteEntry;
+
+
+// Initialize
+loadFinance();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mitra AI — Fitness Coach (Connected)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<!-- Connect to Backend -->
+<script src="api.js"></script>
+<style>
+:root{ --bg:#0a0f14; --bg2:#0b1219; --edge:#223040; --ink:#e8f0ff; --muted:#9bb0c8; --brand:#86ff7b; }
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);font-family:Inter,system-ui;background:
+radial-gradient(1200px 600px at 85% -10%, rgba(134,166,255,.18) 0%, transparent 60%),
+radial-gradient(1000px 600px at 10% -10%, rgba(134,255,123,.16) 0%, transparent 60%),
+linear-gradient(180deg,#0a0f14,#0b1219 60%,#0a0f14);min-height:100vh}
+body:before{content:"";position:fixed;inset:-60px;opacity:.06;pointer-events:none;
+background-image:url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"120\" viewBox=\"0 0 200 120\"><g fill=\"none\" stroke=\"%23bcd2ff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" opacity=\".8\"><rect x=\"10\" y=\"46\" width=\"24\" height=\"28\" rx=\"4\"/><rect x=\"166\" y=\"46\" width=\"24\" height=\"28\" rx=\"4\"/><path d=\"M34 60h132\"/><path d=\"M70 44v32M130 44v32\"/></g></svg>');
+background-size:220px 140px;animation:slow 55s linear infinite}
+@keyframes slow{from{transform:translateY(0)}to{transform:translateY(140px)}}
+.wrap{max-width:1280px;margin:0 auto;padding:14px}
+header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,rgba(10,15,20,.92),rgba(10,15,20,.75));backdrop-filter:blur(8px);border-bottom:1px solid var(--edge)}
+h1{margin:0;line-height:1.1}
+h1 .sub{display:block}
+.badge{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--edge);background:linear-gradient(180deg,#0d141c,#0b1118);margin-left:8px}
+button{border:0;border-radius:14px;padding:10px 16px;font-weight:700;cursor:pointer}
+.btn{background:linear-gradient(180deg,var(--brand),#57e552);color:#041407}
+.ghost{background:transparent;color:var(--ink);border:1px dashed var(--edge)}
+select,input{background:#0e141c;border:1px solid #1e2a36;color:var(--ink);border-radius:12px;padding:10px;outline:none}
+.grid{display:grid;grid-template-columns:520px 1fr;gap:22px}
+.card{background:linear-gradient(180deg,#0e1620,#0d141c);border:1px solid var(--edge);border-radius:16px;padding:16px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.col{display:flex;flex-direction:column;gap:12px}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;justify-content:space-between;gap:8px;background:#0f151f;border:1px dashed #2a3746;border-radius:14px;padding:10px}
+.tab{padding:6px 10px;border-radius:999px;background:#101a26;border:1px solid #2b3b4f;font-size:12px}
+.chip{padding:4px 8px;border-radius:999px;border:1px solid #2a3a4e;background:#0e1620;font-size:12px}
+canvas{width:100%;height:300px;background:#0c141d;border:1px solid #223040;border-radius:14px}
+.muted{color:var(--muted);font-size:12px}
+.level{height:10px;border-radius:6px;background:#0a1117;border:1px solid #203041;overflow:hidden}
+.level>div{height:100%;width:8%;background:linear-gradient(90deg,#6dffd1,#86a6ff);transition:width .09s}
+.log{position:fixed;right:10px;bottom:10px;width:360px;max-height:42vh;overflow:auto;background:#0e1620;border:1px solid #2a3a4e;border-radius:12px;padding:10px;font-size:12px;color:#b7c7de}
+@media (max-width:1100px){.grid{grid-template-columns:1fr}.log{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap row" style="align-items:flex-start">
+    <div><h1>🏋️ Mitra AI — <span class="sub">Fitness Coach (Connected)</span></h1></div>
+    <span class="badge">IRON GYM PRO</span>
+    <div style="flex:1"></div>
+    <div class="row" style="gap:14px;align-items:center">
+      <button id="micStart" class="btn">Start</button>
+      <button id="micStop" class="ghost">Stop</button>
+      <a href="index.html" class="ghost">Home</a>
+      <div class="level" style="width:180px"><div id="level"></div></div>
+      <span class="muted">Status: <span id="micStatus">Idle</span></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid">
+    <section class="col">
+      <!-- MAIN INPUT -->
+      <div class="card">
+        <h3>AI Command Center</h3>
+        <div class="row">
+          <input id="cmd" placeholder='Type command (e.g., "I did 50 pushups")' style="flex:1">
+          <button id="run" class="btn">Send to Brain</button>
+        </div>
+        <div class="muted">Speak or type. The AI will log it to Firebase.</div>
+      </div>
+
+      <div class="card">
+        <h3>Backend Response</h3>
+        <div id="aiResponse" style="color: #86ff7b; font-family: monospace; min-height: 40px;">
+            Waiting for input...
+        </div>
+      </div>
+    </section>
+
+    <section class="col">
+        <div class="card">
+            <h3>Visualizer</h3>
+            <div class="muted">Live charts are disabled in this mode. Check your Firebase Console to see the data arriving in real-time!</div>
+            <canvas id="chart"></canvas>
+        </div>
+    </section>
+  </div>
+</main>
+
+<div class="log" id="log"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+function logln(...a){ const el=$("#log"); const line=document.createElement("div"); line.textContent=a.join(" "); el.prepend(line); }
+function toast(msg){ const t=document.createElement("div"); t.textContent=msg; t.style.position="fixed"; t.style.bottom="18px"; t.style.left="50%"; t.style.transform="translateX(-50%)"; t.style.background="rgba(15,22,31,.96)"; t.style.border="1px solid #2a3946"; t.style.padding="10px 14px"; t.style.borderRadius="12px"; document.body.appendChild(t); setTimeout(()=>t.remove(),2000); }
+
+// ----- AI CONNECTION -----
+async function handleTranscript(text){
+    const t = text.trim();
+    if(!t) return;
+    
+    logln("Sending:", t);
+    $("#aiResponse").textContent = "Thinking...";
+    toast("Sending to Brain...");
+
+    // CALL THE BACKEND
+    const reply = await window.askAI(t);
+    
+    // UPDATE UI
+    $("#aiResponse").textContent = "AI: " + reply;
+    logln("Reply:", reply);
+    toast("Done!");
+}
+
+// ----- Mic Logic -----
+let micStream=null, analyser=null, raf=null, rec=null, manualStop=false;
+
+async function warmMic(){
+  if(micStream) return;
+  try{
+    micStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const src=ctx.createMediaStreamSource(micStream);
+    analyser=ctx.createAnalyser(); analyser.fftSize=1024; src.connect(analyser);
+    const bar=document.querySelector(".level>div");
+    (function loop(){
+      if(!analyser) return;
+      const arr=new Uint8Array(analyser.fftSize); analyser.getByteTimeDomainData(arr);
+      let peak=0; for(let i=0;i<arr.length;i++){ const v=Math.abs(arr[i]-128); if(v>peak) peak=v; }
+      bar.style.width=Math.min(100,Math.max(8,(peak/64)*100))+'%';
+      raf=requestAnimationFrame(loop);
+    })();
+  }catch(e){ logln("Mic permission blocked"); }
+}
+
+function startRec(){
+  const Klass=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!Klass){ alert("Browser doesn't support speech."); return; }
+  manualStop=false;
+  if(rec){ try{rec.stop();}catch{} }
+  rec=new Klass();
+  rec.lang="en-US";
+  rec.interimResults=false; 
+  rec.onstart=()=>{ $("#micStatus").textContent="Listening…"; };
+  rec.onend=()=>{ $("#micStatus").textContent="Idle"; };
+  rec.onresult=(ev)=>{
+      const text = ev.results[0][0].transcript;
+      handleTranscript(text);
+  };
+  rec.start();
+}
+
+$("#micStart").onclick=async()=>{ await warmMic(); startRec(); };
+$("#micStop").onclick=()=>{ manualStop=true; if(rec) rec.stop(); };
+$("#run").onclick=()=>{ handleTranscript($("#cmd").value); };
+
+</script>
+</body>
+</html>

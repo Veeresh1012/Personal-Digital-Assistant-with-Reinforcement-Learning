@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mitra AI — Fitness Coach (AI-Powered)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="api.js"></script>
+<style>
+:root{ --bg:#0a0f14; --bg2:#0b1219; --edge:#223040; --ink:#e8f0ff; --muted:#9bb0c8; --brand:#86ff7b; }
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  color:var(--ink);
+  font-family:Inter,system-ui;
+  background:radial-gradient(1200px 600px at 85% -10%, rgba(134,166,255,.18) 0%, transparent 60%),
+             radial-gradient(1000px 600px at 10% -10%, rgba(134,255,123,.16) 0%, transparent 60%),
+             linear-gradient(180deg,#0a0f14,#0b1219 60%,#0a0f14);
+  min-height:100vh;
+  padding: 20px;
+}
+.wrap{max-width:1400px;margin:0 auto;}
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:20px;
+  background:linear-gradient(180deg,rgba(10,15,20,.92),rgba(10,15,20,.75));
+  backdrop-filter:blur(8px);
+  border:1px solid var(--edge);
+  border-radius:16px;
+  margin-bottom:30px;
+}
+h1{line-height:1.2; font-size:2rem;}
+.badge{
+  font-size:11px;
+  padding:4px 12px;
+  border-radius:999px;
+  border:1px solid var(--edge);
+  background:linear-gradient(180deg,#0d141c,#0b1118);
+  margin-left:8px;
+}
+button{
+  border:0;
+  border-radius:12px;
+  padding:12px 20px;
+  font-weight:700;
+  cursor:pointer;
+  transition: transform 0.2s;
+}
+button:hover{ transform: translateY(-2px); }
+button:active{ transform: translateY(0); }
+.btn{background:linear-gradient(180deg,var(--brand),#57e552);color:#041407;}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--edge);}
+input{
+  background:#0e141c;
+  border:1px solid #1e2a36;
+  color:var(--ink);
+  border-radius:12px;
+  padding:12px;
+  outline:none;
+  font-size:1rem;
+}
+input:focus{ border-color: var(--brand); }
+.grid{display:grid;grid-template-columns:1.2fr 1fr;gap:24px;margin-top:30px;}
+.card{
+  background:linear-gradient(180deg,#0e1620,#0d141c);
+  border:1px solid var(--edge);
+  border-radius:16px;
+  padding:24px;
+}
+.card h3{margin-bottom:16px; font-size:1.3rem;}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.col{display:flex;flex-direction:column;gap:16px;}
+.muted{color:var(--muted);font-size:13px;}
+.controls{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.status-badge{
+  padding:8px 16px;
+  background:#0a1117;
+  border:1px solid var(--edge);
+  border-radius:999px;
+  font-size:14px;
+}
+.status-badge.active{
+  color:var(--brand);
+  border-color:var(--brand);
+}
+.response{
+  background:#0a1117;
+  border:1px solid #223040;
+  border-radius:12px;
+  padding:20px;
+  min-height:100px;
+  font-family:'Courier New',monospace;
+  color:var(--brand);
+  line-height:1.6;
+}
+.quick-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+.chip{
+  padding:6px 12px;
+  border-radius:999px;
+  border:1px solid #2a3a4e;
+  background:#0e1620;
+  font-size:13px;
+  cursor:pointer;
+  transition: all 0.2s;
+}
+.chip:hover{
+  border-color:var(--brand);
+  color:var(--brand);
+}
+.tip-box{
+  background:#0f151f;
+  border:1px solid #2a3746;
+  border-radius:12px;
+  padding:15px;
+  margin-top:10px;
+}
+.workout-item {
+  background: #0f151f;
+  border: 1px solid #2a3746;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.workout-item strong {
+  color: var(--brand);
+}
+.pr-badge {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  margin-left: 8px;
+}
+@media (max-width:1100px){.grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>🏋️ Mitra AI Fitness Coach <span class="badge">AI-POWERED</span></h1>
+    </div>
+    <div class="controls">
+      <span id="statusBadge" class="status-badge">Ready</span>
+      <button id="micStart" class="btn">🎙️ Voice</button>
+      <button id="micStop" class="ghost">Stop</button>
+      <a href="index.html"><button class="ghost">← Home</button></a>
+    </div>
+  </header>
+
+  <main>
+    <div class="grid">
+      <section class="col">
+        <div class="card">
+          <h3>💬 AI Command Center</h3>
+          <div class="row">
+            <input id="cmd" placeholder='Say: "Log 50 pushups", "Bench press 3 sets 8 reps 60kg", "Did 30 minute run"' style="flex:1">
+            <button id="run" class="btn">Send</button>
+          </div>
+          <div class="muted">Fitness Commands: "Log [exercise]", "Did [workout]", "Completed [reps] [exercise]", "[Exercise] [sets] sets [reps] reps [weight]kg"</div>
+          
+          <div class="quick-actions">
+            <div class="chip" onclick="quickLog('Log 20 pushups')">20 Pushups</div>
+            <div class="chip" onclick="quickLog('Log 30 situps')">30 Situps</div>
+            <div class="chip" onclick="quickLog('Log 10 pullups')">10 Pullups</div>
+            <div class="chip" onclick="quickLog('Log bench press 3 sets 8 reps 60kg')">Bench Press</div>
+            <div class="chip" onclick="quickLog('Log squats 3 sets 12 reps')">Squats</div>
+            <div class="chip" onclick="quickLog('Log deadlifts 3 sets 5 reps 80kg')">Deadlifts</div>
+            <div class="chip" onclick="quickLog('Log running 30 minutes')">30min Run</div>
+            <div class="chip" onclick="quickLog('Log cycling 45 minutes')">45min Bike</div>
+            <div class="chip" onclick="quickLog('Log plank 60 seconds')">60sec Plank</div>
+            <div class="chip" onclick="quickLog('Show my workout history')">View History</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🤖 AI Response</h3>
+          <div id="aiResponse" class="response">
+            Waiting for your command... Try "Log 20 pushups" or use voice!
+          </div>
+        </div>
+      </section>
+
+      <section class="col">
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+            <h3 style="margin:0">📊 Recent Workouts</h3>
+            <button onclick="loadWorkouts()" class="ghost" style="padding:6px 12px">🔄</button>
+          </div>
+          <div id="workoutList">
+            <div class="muted">Loading workouts...</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>💡 Quick Tips</h3>
+          <div class="tip-box">
+            <div style="font-weight:600; margin-bottom:5px;">Natural Language</div>
+            <div class="muted">Just speak naturally - AI understands context</div>
+          </div>
+          <div class="tip-box" style="margin-top:10px;">
+            <div style="font-weight:600; margin-bottom:5px;">Track Everything</div>
+            <div class="muted">Cardio, weights, bodyweight - it all counts</div>
+          </div>
+          <div class="tip-box" style="margin-top:10px;">
+            <div style="font-weight:600; margin-bottom:5px;">View in Firebase</div>
+            <div class="muted">Check Firebase Console to see all your data</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+
+let recognition = null;
+let isListening = false;
+
+// Load workouts from backend
+async function loadWorkouts() {
+  try {
+    const response = await fetch('http://localhost:3000/workouts');
+    const data = await response.json();
+    
+    const workoutList = $('#workoutList');
+    
+    if (!data.workouts || data.workouts.length === 0) {
+      workoutList.innerHTML = '<div class="muted">No workouts yet. Start logging!</div>';
+      return;
+    }
+    
+    workoutList.innerHTML = '';
+    
+    data.workouts.slice(0, 10).forEach(workout => {
+      const date = workout.timestamp?.toDate ? 
+                   workout.timestamp.toDate() : 
+                   new Date(workout.timestamp?._seconds * 1000 || Date.now());
+      
+      const div = document.createElement('div');
+      div.className = 'workout-item';
+      
+      const weightText = workout.weight ? ` @ ${workout.weight}kg` : '';
+      const prBadge = workout.is_pr ? '<span class="pr-badge">PR!</span>' : '';
+      
+      div.innerHTML = `
+        <div>
+          <strong>${workout.exercise}</strong>${prBadge}
+          <div class="muted">
+            ${workout.sets}×${workout.reps}${weightText} • ${date.toLocaleDateString()}
+          </div>
+        </div>
+      `;
+      
+      workoutList.appendChild(div);
+    });
+  } catch (error) {
+    console.error('Error loading workouts:', error);
+    $('#workoutList').innerHTML = `
+      <div class="muted">Error loading workouts. Make sure backend is running!</div>
+    `;
+  }
+}
+
+// Initialize Speech Recognition with better settings
+function initVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    alert('Speech recognition not supported. Use Chrome or Edge.');
+    return null;
+  }
+  
+  recognition = new SR();
+  recognition.lang = 'en-US'; // Changed to US English for better gym term recognition
+  recognition.continuous = false;
+  recognition.interimResults = true; // Show interim results
+  recognition.maxAlternatives = 3; // Get multiple alternatives
+  
+  recognition.onstart = () => {
+    isListening = true;
+    $('#statusBadge').textContent = '🎤 Listening...';
+    $('#statusBadge').classList.add('active');
+  };
+  
+  recognition.onend = () => {
+    isListening = false;
+    $('#statusBadge').textContent = 'Ready';
+    $('#statusBadge').classList.remove('active');
+  };
+  
+  recognition.onresult = (event) => {
+    let transcript = '';
+    let isFinal = false;
+    
+    // Process all results
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const result = event.results[i];
+      if (result.isFinal) {
+        transcript = result[0].transcript;
+        isFinal = true;
+      } else {
+        // Show interim results
+        $('#cmd').value = result[0].transcript;
+        $('#statusBadge').textContent = '🎤 Processing: ' + result[0].transcript;
+      }
+    }
+    
+    if (isFinal) {
+      // Clean and enhance the transcript for fitness terms
+      transcript = enhanceFitnessTranscript(transcript);
+      $('#cmd').value = transcript;
+      handleCommand(transcript);
+    }
+  };
+  
+  recognition.onerror = (event) => {
+    console.error('Speech error:', event.error);
+    $('#statusBadge').textContent = 'Error';
+  };
+  
+  return recognition;
+}
+
+// Handle Commands
+async function handleCommand(text) {
+  if (!text.trim()) return;
+  
+  $('#aiResponse').textContent = '🤔 Processing with AI...';
+  $('#statusBadge').textContent = 'Thinking...';
+  
+  try {
+    const reply = await window.askAI(text);
+    $('#aiResponse').textContent = reply;
+    $('#statusBadge').textContent = 'Ready';
+    
+    // If workout logged, refresh the list
+    if (reply.includes('Logged') || reply.includes('logged') || reply.includes('PR')) {
+      setTimeout(() => loadWorkouts(), 500);
+    }
+  } catch (error) {
+    $('#aiResponse').textContent = '❌ Error: ' + error.message + '\n\nMake sure backend is running!';
+    $('#statusBadge').textContent = 'Error';
+  }
+}
+
+// Enhance fitness transcript with comprehensive gym terminology
+function enhanceFitnessTranscript(text) {
+  let enhanced = text.toLowerCase();
+  
+  // Comprehensive fitness terminology corrections
+  const corrections = {
+    // Exercise variations
+    'push up': 'pushup', 'push ups': 'pushups', 'pushup': 'pushups',
+    'sit up': 'situp', 'sit ups': 'situps', 'situp': 'situps',
+    'pull up': 'pullup', 'pull ups': 'pullups', 'pullup': 'pullups',
+    'chin up': 'chinup', 'chin ups': 'chinups',
+    'bench press': 'bench press', 'benchpress': 'bench press',
+    'dead lift': 'deadlift', 'dead lifts': 'deadlifts', 'deadlift': 'deadlifts',
+    'squad': 'squat', 'squads': 'squats', 'squat': 'squats',
+    'bicep curl': 'bicep curls', 'biceps curl': 'bicep curls',
+    'tricep dip': 'tricep dips', 'triceps dip': 'tricep dips',
+    'lat pull': 'lat pulldown', 'lat pulldown': 'lat pulldowns',
+    'shoulder press': 'shoulder press', 'military press': 'shoulder press',
+    'leg press': 'leg press', 'calf raise': 'calf raises',
+    'mountain climber': 'mountain climbers', 'jumping jack': 'jumping jacks',
+    
+    // Cardio terms
+    'running': 'running', 'jogging': 'running', 'jog': 'running',
+    'walking': 'walking', 'walk': 'walking',
+    'cycling': 'cycling', 'bike': 'cycling', 'biking': 'cycling',
+    'swimming': 'swimming', 'swim': 'swimming',
+    'treadmill': 'treadmill run', 'elliptical': 'elliptical',
+    
+    // Units and measurements
+    'kg': 'kg', 'kilograms': 'kg', 'kilogram': 'kg',
+    'pounds': 'lbs', 'pound': 'lbs', 'lbs': 'lbs',
+    'reps': 'reps', 'repetitions': 'reps', 'rep': 'reps',
+    'sets': 'sets', 'set': 'sets',
+    'minutes': 'minutes', 'minute': 'minutes', 'min': 'minutes',
+    'seconds': 'seconds', 'second': 'seconds', 'sec': 'seconds',
+    
+    // Action words
+    'did': 'log', 'completed': 'log', 'finished': 'log',
+    'performed': 'log', 'executed': 'log'
+  };
+  
+  // Apply corrections
+  Object.keys(corrections).forEach(wrong => {
+    const regex = new RegExp(wrong, 'gi');
+    enhanced = enhanced.replace(regex, corrections[wrong]);
+  });
+  
+  // Add 'log' prefix for fitness activities
+  const fitnessPatterns = [
+    /\d+\s+(pushups?|situps?|pullups?|squats?|burpees?|crunches?)/,
+    /\d+\s+minutes?\s+(running|walking|cycling|swimming)/,
+    /(bench press|deadlifts?|squats?)\s+\d+/,
+    /\d+\s+(sets?|reps?)\s+/
+  ];
+  
+  const needsLog = fitnessPatterns.some(pattern => pattern.test(enhanced));
+  if (needsLog && !enhanced.includes('log')) {
+    enhanced = 'log ' + enhanced;
+  }
+  
+  // Convert time expressions
+  enhanced = enhanced.replace(/(\d+)\s*mins?/, '$1 minutes');
+  enhanced = enhanced.replace(/(\d+)\s*secs?/, '$1 seconds');
+  
+  return enhanced;
+}
+
+function quickLog(command) {
+  $('#cmd').value = command;
+  handleCommand(command);
+}
+
+// Event Listeners
+$('#micStart').onclick = () => {
+  if (!recognition) recognition = initVoice();
+  if (recognition && !isListening) recognition.start();
+};
+
+$('#micStop').onclick = () => {
+  if (recognition && isListening) recognition.stop();
+};
+
+$('#run').onclick = () => handleCommand($('#cmd').value);
+
+$('#cmd').onkeypress = (e) => {
+  if (e.key === 'Enter') handleCommand($('#cmd').value);
+};
+
+// Make functions global
+window.quickLog = quickLog;
+window.loadWorkouts = loadWorkouts;
+window.enhanceFitnessTranscript = enhanceFitnessTranscript;
+
+// Load workouts on page load
+loadWorkouts();
+</script>
+</body>
+</html>

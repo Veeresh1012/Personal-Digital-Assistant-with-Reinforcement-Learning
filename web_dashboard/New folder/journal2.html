@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mitra AI — Journal PRO (Paper • Mic v5)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{ --ink:#1d2540; --muted:#5b6a8a; --accent:#1f6feb; }
+*{box-sizing:border-box}
+body{
+  margin:0;color:var(--ink);font-family:Inter,system-ui;
+  background:
+    linear-gradient(90deg, transparent 64px, #ffd1d1 64px, #ffd1d1 66px, transparent 66px),
+    repeating-linear-gradient(#0000, #0000 29px, #dfe7ff 30px, #0000 31px),
+    linear-gradient(#fafcff, #f1f6ff);
+  min-height:100vh; overflow-x:hidden;
+}
+header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.75)); backdrop-filter:blur(8px); border-bottom:1px solid #e1e9ff}
+.wrap{max-width:1180px;margin:0 auto;padding:12px 14px}
+h1{margin:0;font-size:22px}
+.badge{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid #e1e9ff;background:#ffffffc0}
+button{border:0;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;transition:.15s transform,.15s box-shadow}
+button:hover{transform:translateY(-1px)}
+.btn{background:var(--accent);color:white; box-shadow:0 6px 18px rgba(31,111,235,.25)}
+.ghost{background:transparent;color:var(--ink);border:1px dashed #c6d4ff}
+input,select,textarea{background:white;border:1px solid #c6d4ff;border-radius:12px;padding:10px;outline:none}
+.grid{display:grid;grid-template-columns:380px 1fr;gap:18px}
+.card{background:#ffffffeb;border:1px solid #e1e9ff;border-radius:16px;padding:14px;box-shadow:0 10px 30px rgba(13,30,80,.06)}
+.list{display:flex;flex-direction:column;gap:8px;max-height:70vh;overflow:auto}
+.item{background:white;border:1px dashed #d5e0ff;border-radius:14px;padding:10px;cursor:pointer}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.col{display:flex;flex-direction:column;gap:10px}
+.muted{color:var(--muted);font-size:12px}
+.level{height:10px;border-radius:6px;background:#eef3ff;border:1px solid #d6e2ff;overflow:hidden}
+.level>div{height:100%;width:8%;background:linear-gradient(90deg,#1f6feb,#7aa6ff);transition:width .09s}
+textarea{min-height:48vh;background: repeating-linear-gradient(#0000, #0000 29px, #e8eeff 30px, #0000 31px), white}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center}
+.modal .sheet{max-width:820px;width:92%;background:white;border:1px solid #e1e9ff;border-radius:16px;padding:16px;box-shadow:0 30px 80px rgba(13,30,80,.15)}
+@media (max-width:1100px){ .grid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap" style="display:flex;gap:12px;align-items:center">
+    <h1>📓 <b>Mitra AI — Journal</b></h1><span class="badge">PRO</span>
+    <div style="flex:1"></div>
+    <div class="row">
+      <button id="micStart" class="btn">Start</button>
+      <button id="micStop" class="ghost">Stop</button>
+      <button id="help" class="ghost">Help / Commands</button>
+      <label class="muted">Lang:
+        <select id="lang"><option>en-US</option><option value="en-IN" selected>en-IN</option><option>en-GB</option></select>
+      </label>
+      <label class="muted">Interim <input type="checkbox" id="interim" checked></label>
+      <label class="muted">Wake word <input type="checkbox" id="wake"></label>
+      <div class="level"><div id="level"></div></div>
+      <span class="muted">Status: <span id="micStatus">Idle</span></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid">
+    <aside>
+      <div class="card">
+        <div class="row">
+          <input id="search" placeholder="Search title & content…">
+          <select id="moodFilter"><option value="">Mood: Any</option><option>Happy</option><option>Calm</option><option>Focused</option><option>Stressed</option><option>Sad</option></select>
+          <button id="newEntry" class="btn">New</button>
+        </div>
+        <div id="list" class="list"></div>
+      </div>
+    </aside>
+
+    <section class="col">
+      <div class="card">
+        <div class="row">
+          <input id="title" placeholder="Entry title" style="flex:1;font-size:20px;font-weight:700">
+          <select id="mood"><option value="">Mood</option><option>Happy</option><option>Calm</option><option>Focused</option><option>Stressed</option><option>Sad</option></select>
+          <input id="tags" placeholder="tags (comma-separated)">
+          <button id="exportMd" class="ghost">Export .md</button>
+          <button id="exportJson" class="ghost">Export all</button>
+        </div>
+        <textarea id="content" placeholder="Write your thoughts…"></textarea>
+        <div class="row">
+          <button id="delete" class="ghost">Delete</button>
+          <div style="flex:1"></div>
+          <span class="muted">Created: <span id="createdAt">—</span> • Updated: <span id="updatedAt">—</span> • Words: <span id="wcount">0</span></span>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="modal" id="helpModal">
+  <div class="sheet">
+    <h3>🎤 Voice Commands</h3>
+    <div class="muted">
+      new &lt;title&gt; • open &lt;title&gt; • set title &lt;title&gt; • write/append/insert &lt;text&gt; • replace content with &lt;text&gt; •
+      set mood &lt;happy|calm|focused|stressed|sad&gt; • tag &lt;tag1, tag2&gt; • search &lt;text&gt; • filter mood &lt;mood&gt; •
+      summarize entry • word count • export entry • export all • go to today/yesterday • start/stop listening • delete entry
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="ghost" id="closeHelp">Close</button></div>
+  </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+
+// Persistence
+const KEY="mitra.journal.pro.v1";
+let entries = JSON.parse(localStorage.getItem(KEY)||"[]");
+function save(){ localStorage.setItem(KEY, JSON.stringify(entries)); }
+function uid(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+function fmt(ts){ return ts? new Date(ts).toLocaleString() : "—"; }
+function wcount(s){ return (s||"").trim().split(/\s+/).filter(Boolean).length; }
+
+let activeId = entries[0]?.id || null;
+function ensureOne(){ if(!activeId){ const e={id:uid(),title:"",content:"",mood:"",tags:[],createdAt:Date.now(),updatedAt:Date.now()}; entries.unshift(e); activeId=e.id; save(); } }
+function current(){ return entries.find(e=>e.id===activeId); }
+
+function renderList(){
+  const q=document.getElementById("search").value.toLowerCase(), mood=document.getElementById("moodFilter").value;
+  const list=document.getElementById("list"); list.innerHTML="";
+  entries.slice().sort((a,b)=>b.updatedAt-a.updatedAt).filter(e=>(!q||(e.title?.toLowerCase().includes(q)||e.content?.toLowerCase().includes(q))) && (!mood||e.mood===mood)).forEach(e=>{
+    const div=document.createElement("div"); div.className="item"; div.onclick=()=>{ activeId=e.id; renderEditor(); };
+    div.innerHTML=`<div style="font-weight:700">${e.title||"(untitled)"}</div><div class="muted">${new Date(e.updatedAt).toDateString()} • ${e.mood||"—"}</div>`;
+    list.append(div);
+  });
+}
+function renderEditor(){
+  ensureOne();
+  const e=current();
+  document.getElementById("title").value=e.title||""; document.getElementById("content").value=e.content||""; document.getElementById("mood").value=e.mood||""; document.getElementById("tags").value=(e.tags||[]).join(", ");
+  document.getElementById("createdAt").textContent=fmt(e.createdAt); document.getElementById("updatedAt").textContent=fmt(e.updatedAt); document.getElementById("wcount").textContent=wcount(e.content);
+}
+function exportMd(e){ const tags=(e.tags||[]).join(", "); return `# ${e.title||"(untitled)"}\n\n- Created: ${new Date(e.createdAt).toISOString()}\n- Updated: ${new Date(e.updatedAt).toISOString()}\n- Mood: ${e.mood||"-"}\n- Tags: ${tags||"-"}\n\n---\n\n${e.content||""}\n`; }
+function dl(name, text){ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type:"text/plain"})); a.download=name; a.click(); URL.revokeObjectURL(a.href); }
+
+["#title","#content","#mood","#tags"].forEach(sel=>document.querySelector(sel).addEventListener("input", ()=>{
+  const e=current(); e.title=document.getElementById("title").value; e.content=document.getElementById("content").value; e.mood=document.getElementById("mood").value; e.tags=document.getElementById("tags").value.split(",").map(s=>s.trim()).filter(Boolean);
+  e.updatedAt=Date.now(); save(); document.getElementById("updatedAt").textContent=fmt(e.updatedAt); document.getElementById("wcount").textContent=wcount(e.content);
+}));
+document.getElementById("newEntry").onclick=()=>{ const e={id:uid(),title:"",content:"",mood:"",tags:[],createdAt:Date.now(),updatedAt:Date.now()}; entries.unshift(e); activeId=e.id; save(); renderList(); renderEditor(); };
+document.getElementById("delete").onclick=()=>{ const e=current(); if(!e) return; if(confirm("Delete this entry?")){ entries=entries.filter(x=>x.id!==e.id); save(); activeId=entries[0]?.id||null; renderList(); renderEditor(); } };
+document.getElementById("exportMd").onclick=()=>{ const e=current(); if(!e) return; dl(`${(e.title||"journal").replace(/[^a-z0-9\-]+/gi,"_")}.md`, exportMd(e)); };
+document.getElementById("exportJson").onclick=()=>{ dl(`journal_export_${Date.now()}.json`, JSON.stringify(entries,null,2)); };
+document.getElementById("search").addEventListener("input", renderList); document.getElementById("moodFilter").addEventListener("change", renderList);
+
+// Meter
+let micStream=null, analyser=null, raf=null;
+async function warmMic(){
+  if(micStream) return;
+  try{
+    micStream = await navigator.mediaDevices.getUserMedia({audio:true});
+    const ctx = new (window.AudioContext||window.webkitAudioContext)(); const src = ctx.createMediaStreamSource(micStream);
+    analyser = ctx.createAnalyser(); analyser.fftSize=1024; src.connect(analyser);
+    const bar=document.querySelector(".level>div");
+    (function loop(){ const arr=new Uint8Array(analyser.fftSize); analyser.getByteTimeDomainData(arr);
+      let peak=0; for(let i=0;i<arr.length;i++){ const v=Math.abs(arr[i]-128); if(v>peak) peak=v; }
+      const pct=Math.min(100, Math.max(8, (peak/64)*100)); bar.style.width=pct+"%"; raf=requestAnimationFrame(loop); })();
+  }catch(e){ alert("Mic permission blocked — allow microphone for this site."); }
+}
+
+// Mic Engine v5 (sentence mode)
+let rec=null, manualStop=false;
+function startRec(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ alert("SpeechRecognition not supported in this browser."); return; }
+  manualStop=false;
+  rec=new SR();
+  rec.lang=document.getElementById("lang").value||"en-IN";
+  rec.interimResults=document.getElementById("interim").checked;
+  rec.continuous=false;
+
+  rec.onstart=()=>{ document.getElementById("micStatus").textContent="Listening…"; };
+  rec.onerror=(e)=>{ if(e.error==="not-allowed"){ alert("Allow microphone permission for this site."); } };
+  rec.onend=()=>{ if(!manualStop){ setTimeout(()=>{ try{ rec.start(); }catch{} }, 150); } else { document.getElementById("micStatus").textContent="Idle"; } };
+  rec.onresult=(ev)=>{ for(let i=ev.resultIndex;i<ev.results.length;i++){ const r=ev.results[i]; if(r.isFinal){ let text=(r[0]?.transcript||"").trim(); let conf=r[0]?.confidence ?? 1; handleTranscript(text, true, conf); } } };
+  try{ rec.start(); }catch{}
+}
+async function stopRec(){
+  manualStop=true;
+  try{ rec && rec.stop(); }catch{}
+  try{ rec && rec.abort && rec.abort(); }catch{}
+  try{ if(micStream){ micStream.getTracks().forEach(t=>t.stop()); micStream=null; } }catch{}
+  document.getElementById("micStatus").textContent="Idle";
+}
+document.getElementById("micStart").onclick=async ()=>{ await warmMic(); startRec(); };
+document.getElementById("micStop").onclick=()=>stopRec();
+document.getElementById("help").onclick=()=> document.getElementById("helpModal").style.display="flex";
+document.getElementById("closeHelp").onclick=()=> document.getElementById("helpModal").style.display="none";
+
+// Helpers
+function clean(t){ return t.replace(/\b(okay|ok|hmm|uh|um|like|you know|please)\b/gi," ").replace(/\s{2,}/g," ").trim(); }
+function cap(s){ return s.replace(/\s+/g," ").trim().replace(/^\w/,c=>c.toUpperCase()); }
+
+// Commands
+function handleTranscript(text, final=true, conf=1){
+  let t=text.toLowerCase().trim();
+  if(document.getElementById("wake").checked){
+    if(t.startsWith("hey mitra")) t=t.replace(/^hey mitra[, ]*/,"");
+    else if(t.startsWith("hi mitra")) t=t.replace(/^hi mitra[, ]*/,"");
+    else if(t.startsWith("mitra")) t=t.replace(/^mitra[, ]*/,"");
+    else return;
+  }
+  t = clean(t);
+
+  if(t==="start listening"){ document.getElementById("micStart").click(); return; }
+  if(t==="stop listening"){ document.getElementById("micStop").click(); return; }
+  if(t.includes("help")){ document.getElementById("helpModal").style.display="flex"; return; }
+
+  let m=t.match(/^new (.+)$/);
+  if(m){ const e={id:uid(),title:cap(m[1]),content:"",mood:"",tags:[],createdAt:Date.now(),updatedAt:Date.now()}; entries.unshift(e); activeId=e.id; save(); renderList(); renderEditor(); return; }
+  m=t.match(/^open (.+)$/); if(m){ const title=m[1].trim().toLowerCase(); const hit=entries.find(e=> (e.title||"").toLowerCase()===title); if(hit){ activeId=hit.id; renderEditor(); } return; }
+  m=t.match(/^set title (.+)$/); if(m){ const e=current(); e.title=cap(m[1]); e.updatedAt=Date.now(); save(); renderList(); renderEditor(); return; }
+
+  m=t.match(/^(write|append|insert) (.+)$/); if(m){ const e=current(); e.content=(e.content? e.content+"\n":"")+cap(m[2]); e.updatedAt=Date.now(); save(); renderEditor(); return; }
+  m=t.match(/^replace content with (.+)$/); if(m){ const e=current(); e.content=cap(m[1]); e.updatedAt=Date.now(); save(); renderEditor(); return; }
+
+  m=t.match(/^set mood (happy|calm|focused|stressed|sad)$/); if(m){ const e=current(); e.mood=cap(m[1]); e.updatedAt=Date.now(); save(); renderEditor(); return; }
+  m=t.match(/^tag (.+)$/); if(m){ const e=current(); e.tags=m[1].split(",").map(s=>cap(s.trim())).filter(Boolean); e.updatedAt=Date.now(); save(); renderEditor(); return; }
+
+  if(t==="delete entry"){ const e=current(); if(!e) return; if(confirm("Delete this entry?")){ entries=entries.filter(x=>x.id!==e.id); save(); activeId=entries[0]?.id||null; renderList(); renderEditor(); } return; }
+
+  if(t==="export entry"){ const e=current(); if(!e) return; const name=(e.title||"journal").replace(/[^a-z0-9\-]+/gi,"_")+".md"; const md=`# ${e.title||"(untitled)"}\n\n${e.content||""}\n`; const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([md],{type:"text/markdown"})); a.download=name; a.click(); return; }
+  if(t==="export all"){ const name="journal_export_"+Date.now()+".json"; const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([JSON.stringify(entries,null,2)],{type:"application/json"})); a.download=name; a.click(); return; }
+
+  m=t.match(/^search (.+)$/); if(m){ document.getElementById("search").value=m[1]; renderList(); return; }
+  m=t.match(/^filter mood (happy|calm|focused|stressed|sad)$/); if(m){ document.getElementById("moodFilter").value=cap(m[1]); renderList(); return; }
+
+  if(t==="summarize entry"){ const e=current(); if(!e) return; const txt=(e.content||"").split(/[.!?]\s+/).slice(0,2).join(". "); alert(txt? ("Summary: "+txt):"No content to summarize."); return; }
+  if(t==="word count"){ const e=current(); if(!e) return; alert("Words: "+wcount(e.content)); return; }
+  if(t==="go to today"){ const today = new Date(); const T = today.toDateString(); const hit = entries.find(e=> new Date(e.createdAt).toDateString()===T); if(hit){ activeId=hit.id; renderEditor(); } else { const e={id:uid(),title:"Today",content:"",mood:"",tags:[],createdAt:Date.now(),updatedAt:Date.now()}; entries.unshift(e); activeId=e.id; renderList(); renderEditor(); } return; }
+  if(t==="go to yesterday"){ const y=new Date(Date.now()-86400000).toDateString(); const hit=entries.find(e=> new Date(e.createdAt).toDateString()===y); if(hit){ activeId=hit.id; renderEditor(); } else { const e={id:uid(),title:"Yesterday",content:"",mood:"",tags:[],createdAt:Date.now()-86400000,updatedAt:Date.now()-86400000}; entries.unshift(e); activeId=e.id; renderList(); renderEditor(); } return; }
+
+  if(t==="save"){ const e=current(); e.updatedAt=Date.now(); save(); renderEditor(); return; }
+
+  alert("No match: "+text);
+}
+
+renderList(); renderEditor();
+</script>
+</body>
+</html>

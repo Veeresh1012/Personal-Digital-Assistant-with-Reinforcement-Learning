@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mitra AI — Journal (AI-Powered)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="api.js"></script>
+<style>
+:root{ --ink:#1d2540; --muted:#5b6a8a; --accent:#1f6feb; }
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  color:var(--ink);font-family:Inter,system-ui;
+  background:
+    linear-gradient(90deg, transparent 64px, #ffd1d1 64px, #ffd1d1 66px, transparent 66px),
+    repeating-linear-gradient(#0000, #0000 29px, #dfe7ff 30px, #0000 31px),
+    linear-gradient(#fafcff, #f1f6ff);
+  min-height:100vh; overflow-x:hidden; padding:20px;
+}
+header{
+  max-width:1180px;margin:0 auto 30px;padding:20px;
+  background:rgba(255,255,255,.95);backdrop-filter:blur(8px);
+  border:1px solid #e1e9ff;border-radius:16px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+h1{font-size:1.8rem;color:var(--accent)}
+.badge{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid #e1e9ff;background:#ffffffc0;margin-left:8px}
+button{border:0;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;transition:.15s}
+button:hover{transform:translateY(-1px)}
+.btn{background:var(--accent);color:white; box-shadow:0 6px 18px rgba(31,111,235,.25)}
+.ghost{background:transparent;color:var(--ink);border:1px dashed #c6d4ff}
+input,select,textarea{background:white;border:1px solid #c6d4ff;border-radius:12px;padding:10px;outline:none}
+
+.wrap{max-width:1180px;margin:0 auto;}
+.grid{display:grid;grid-template-columns:380px 1fr;gap:18px}
+.card{background:#ffffffeb;border:1px solid #e1e9ff;border-radius:16px;padding:18px;box-shadow:0 10px 30px rgba(13,30,80,.06)}
+.ai-section{
+  background:rgba(31,111,235,0.08);
+  padding:15px;
+  border-radius:12px;
+  border:1px solid rgba(31,111,235,0.2);
+  margin-bottom:15px;
+}
+.ai-response{
+  background:rgba(31,111,235,0.05);
+  padding:12px;
+  border-radius:8px;
+  font-family:'Courier New',monospace;
+  font-size:13px;
+  min-height:50px;
+  margin-top:8px;
+  color:var(--accent);
+}
+.list{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto}
+.item{background:white;border:1px dashed #d5e0ff;border-radius:14px;padding:10px;cursor:pointer;transition:0.2s}
+.item:hover{border-color:var(--accent);transform:translateX(3px)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.col{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--muted);font-size:12px}
+textarea{
+  min-height:50vh;
+  background: repeating-linear-gradient(#0000, #0000 29px, #e8eeff 30px, #0000 31px), white;
+  font-family:inherit;
+  resize:vertical;
+}
+@media (max-width:1100px){ .grid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>📔 Mitra AI — Journal <span class="badge">AI-POWERED</span></h1>
+  </div>
+  <div class="row" style="gap:12px">
+    <span class="muted">Status: <span id="statusText">Idle</span></span>
+    <button id="micBtn" class="btn">🎙️ Voice</button>
+    <button id="stopBtn" class="ghost">Stop</button>
+    <a href="index.html"><button class="ghost">← Home</button></a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid">
+    <aside>
+      <div class="card">
+        <h3 style="margin:0 0 12px 0">Recent Entries</h3>
+        <div id="list" class="list">
+          <div class="muted">Loading from cloud...</div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="col">
+      <div class="card">
+        <div class="ai-section">
+          <h3 style="margin:0 0 10px 0;font-size:1rem">🤖 AI Journal Commands</h3>
+          <div class="row">
+            <input id="aiInput" placeholder='Say: "Write journal: Had a great day today"' style="flex:1">
+            <button id="aiSend" class="btn">Send</button>
+          </div>
+          <div class="muted" style="margin-top:6px">
+            Try: "Write journal: Feeling productive today, completed 3 tasks"
+          </div>
+          <div id="aiResponse" class="ai-response">
+            Ready to write! Use natural language.
+          </div>
+        </div>
+
+        <div class="row">
+          <input id="title" placeholder="Entry title (optional)" style="flex:1;font-size:18px;font-weight:700">
+          <select id="mood">
+            <option value="">Mood</option>
+            <option>Happy</option>
+            <option>Calm</option>
+            <option>Focused</option>
+            <option>Stressed</option>
+            <option>Sad</option>
+          </select>
+        </div>
+        <textarea id="content" placeholder="Write your thoughts here..."></textarea>
+        <div class="row" style="margin-top:12px">
+          <button id="saveManual" class="btn">Save Manually</button>
+          <div style="flex:1"></div>
+          <span class="muted">Words: <span id="wcount">0</span></span>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+let entries = [];
+let recognition = null;
+let isListening = false;
+
+// Load journal entries
+async function loadJournal() {
+  try {
+    const response = await fetch('http://localhost:3000/journal');
+    const data = await response.json();
+    entries = data.entries || [];
+    renderList();
+  } catch (error) {
+    console.error('Error loading journal:', error);
+    $('#list').innerHTML = '<div class="muted">Error loading. Check backend.</div>';
+  }
+}
+
+// Render entry list
+function renderList() {
+  const el = $('#list');
+  
+  if (!entries || entries.length === 0) {
+    el.innerHTML = '<div class="muted">No entries yet. Use AI to write your first journal entry!</div>';
+    return;
+  }
+  
+  el.innerHTML = '';
+  
+  entries.forEach(entry => {
+    const date = entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp?._seconds * 1000 || Date.now());
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.onclick = () => loadEntry(entry);
+    div.innerHTML = `
+      <div style="font-weight:700">${entry.title || '(untitled)'}</div>
+      <div class="muted">${date.toLocaleDateString()} • ${entry.mood || 'neutral'}</div>
+    `;
+    el.appendChild(div);
+  });
+}
+
+// Load entry into editor
+function loadEntry(entry) {
+  $('#title').value = entry.title || '';
+  $('#content').value = entry.content || '';
+  $('#mood').value = entry.mood || '';
+  updateWordCount();
+}
+
+// Update word count
+function updateWordCount() {
+  const text = $('#content').value || '';
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  $('#wcount').textContent = words;
+}
+
+// Handle AI Commands
+async function handleAICommand(text) {
+  if (!text.trim()) return;
+  
+  const responseEl = $('#aiResponse');
+  responseEl.textContent = '🤔 Processing with AI...';
+  $('#statusText').textContent = 'Thinking...';
+  
+  try {
+    const reply = await window.askAI(text);
+    responseEl.textContent = reply;
+    $('#statusText').textContent = 'Ready';
+    
+    // If journal saved successfully, refresh
+    if (reply.includes('Journal entry saved')) {
+      setTimeout(() => {
+        loadJournal();
+        $('#content').value = '';
+        $('#title').value = '';
+      }, 500);
+    }
+  } catch (error) {
+    responseEl.textContent = '❌ Error: ' + error.message;
+    $('#statusText').textContent = 'Error';
+  }
+}
+
+// Manual save
+async function saveManual() {
+  const content = $('#content').value.trim();
+  if (!content) {
+    alert('Please write something first!');
+    return;
+  }
+  
+  const title = $('#title').value.trim();
+  const mood = $('#mood').value;
+  
+  const command = `Write journal${title ? ` titled ${title}` : ''}: ${content}${mood ? `. Mood: ${mood}` : ''}`;
+  await handleAICommand(command);
+}
+
+// Voice Recognition
+function initVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    alert('Speech recognition not supported. Use Chrome or Edge.');
+    return null;
+  }
+  
+  recognition = new SR();
+  recognition.lang = 'en-IN';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  
+  recognition.onstart = () => {
+    isListening = true;
+    $('#statusText').textContent = 'Listening...';
+  };
+  
+  recognition.onend = () => {
+    isListening = false;
+    $('#statusText').textContent = 'Idle';
+  };
+  
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    $('#aiInput').value = transcript;
+    handleAICommand(transcript);
+  };
+  
+  return recognition;
+}
+
+// Event Listeners
+$('#aiSend').onclick = () => handleAICommand($('#aiInput').value);
+$('#aiInput').onkeypress = (e) => {
+  if (e.key === 'Enter') handleAICommand($('#aiInput').value);
+};
+$('#micBtn').onclick = () => {
+  if (!recognition) recognition = initVoice();
+  if (recognition && !isListening) recognition.start();
+};
+$('#stopBtn').onclick = () => {
+  if (recognition && isListening) recognition.stop();
+};
+$('#saveManual').onclick = saveManual;
+$('#content').oninput = updateWordCount;
+
+// Initialize
+loadJournal();
+updateWordCount();
+</script>
+</body>
+</html>

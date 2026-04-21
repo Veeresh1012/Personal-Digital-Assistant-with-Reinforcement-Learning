@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mitra AI - Your Personal Assistant</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="api.js"></script>
+    <script src="voice-manager.js"></script>
+    <style>
+        /* AI Command Center - Collapsible */
+        .ai-command-overlay {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 400px;
+            background: rgba(0, 10, 20, 0.95);
+            backdrop-filter: blur(20px);
+            border: 2px solid #00eaff;
+            border-radius: 20px;
+            box-shadow: 0 0 50px rgba(0, 234, 255, 0.3);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .ai-command-overlay.minimized {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+        
+        .ai-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            cursor: pointer;
+            background: rgba(0, 234, 255, 0.1);
+            border-radius: 18px 18px 0 0;
+        }
+        
+        .ai-header h3 {
+            margin: 0;
+            color: #00eaff;
+            font-size: 16px;
+        }
+        
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: #00eaff;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+        }
+        
+        .ai-command-overlay.minimized .toggle-btn {
+            transform: rotate(180deg);
+            font-size: 30px;
+        }
+        
+        .ai-content {
+            padding: 20px;
+            display: block;
+        }
+        
+        .ai-command-overlay.minimized .ai-content {
+            display: none;
+        }
+        
+        .ai-command-overlay.minimized .ai-header {
+            padding: 15px;
+            border-radius: 50%;
+            justify-content: center;
+        }
+        
+        .ai-command-overlay.minimized .ai-header h3 {
+            display: none;
+        }
+        
+        .ai-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .ai-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0, 234, 255, 0.3);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            outline: none;
+        }
+        
+        .ai-input:focus {
+            border-color: #00eaff;
+        }
+        
+        .ai-btn {
+            background: #00eaff;
+            color: #000;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .ai-btn:hover {
+            background: #00ffff;
+            transform: translateY(-2px);
+        }
+        
+        .ai-response {
+            background: rgba(0, 234, 255, 0.1);
+            border: 1px solid rgba(0, 234, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            min-height: 80px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            color: #00eaff;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .voice-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #00eaff;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #00eaff;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .quick-commands {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .quick-cmd {
+            background: rgba(0, 234, 255, 0.2);
+            border: 1px solid rgba(0, 234, 255, 0.3);
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quick-cmd:hover {
+            background: rgba(0, 234, 255, 0.4);
+            border-color: #00eaff;
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header class="main-header">
+    <div class="logo">Mitra AI</div>
+    <nav>
+        <a href="#agent">Agent</a>
+        <a href="#capabilities">Capabilities</a>
+        <a href="#dashboard">Dashboard</a>
+    </nav>
+</header>
+
+<!-- HERO SECTION -->
+<section id="agent" class="hero-section">
+    <div class="hero-left">
+        <h1>Your AI Companion</h1>
+        <p>Mitra AI — Smart. Adaptive. Conversational.</p>
+        <a href="#dashboard" class="primary-btn">Try Now</a>
+    </div>
+
+    <div class="hero-orb"></div>
+</section>
+
+<!-- CAPABILITIES -->
+<section id="capabilities" class="cap-section">
+    <h2>Capabilities of Mitra AI</h2>
+
+    <p style="max-width:800px;margin:auto;margin-top:15px;color:#c9d7e8;font-size:1.1rem;">
+        Mitra AI is a multifunctional personal assistant designed to support everyday productivity and wellbeing.
+        It learns from user behavior, adapts through feedback, and manages multiple lifestyle segments using a unified intelligent interface.
+    </p>
+
+    <div class="cap-grid">
+        <div class="cap-card">
+            AI-Powered Understanding
+            <p style="font-size:0.9rem;color:#9ec7d8;margin-top:6px;">
+                Natural language processing with Groq AI for intelligent command interpretation.
+            </p>
+        </div>
+
+        <div class="cap-card">
+            Cloud Storage
+            <p style="font-size:0.9rem;color:#9ec7d8;margin-top:6px;">
+                Firebase integration for persistent, cross-device data synchronization.
+            </p>
+        </div>
+
+        <div class="cap-card">
+            Multi-Module System
+            <p style="font-size:0.9rem;color:#9ec7d8;margin-top:6px;">
+                Unified platform for fitness, finance, tasks, journal, travel, and healthcare.
+            </p>
+        </div>
+
+        <div class="cap-card">
+            Voice Commands
+            <p style="font-size:0.9rem;color:#9ec7d8;margin-top:6px;">
+                Hands-free operation with advanced speech recognition technology.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- DASHBOARD LINKS -->
+<section id="dashboard" class="dash-section">
+    <h2>Mitra AI Dashboard</h2>
+
+    <p style="max-width:850px;margin:auto;margin-top:15px;color:#c9d7e8;font-size:1.1rem;">
+        Explore the modules below. Each is AI-powered and connects to your personal cloud database.
+    </p>
+
+    <div class="dash-buttons">
+        <a class="dash-btn" href="fitness.html">🏋️ Fitness Coach</a>
+        <a class="dash-btn" href="tasks.html">✅ To-Do Manager</a>
+        <a class="dash-btn" href="journal.html">📔 Journal</a>
+        <a class="dash-btn" href="finance.html">💰 Finance Tracker</a>
+        <a class="dash-btn" href="travel.html">✈️ Travel Planner</a>
+        <a class="dash-btn" href="lifestyle.html">🌱 Lifestyle Manager</a>
+        <a class="dash-btn" href="healthcare.html">💊 Healthcare</a>
+        <a class="dash-btn" href="schedule.html">📅 My Schedule</a>
+    </div>
+</section>
+
+<!-- AI COMMAND CENTER (Collapsible) -->
+<div class="ai-command-overlay minimized" id="aiPanel">
+    <div class="ai-header" onclick="toggleAI()">
+        <h3>🤖 AI Command Center</h3>
+        <button class="toggle-btn">−</button>
+    </div>
+    
+    <div class="ai-content">
+        <div class="ai-input-group">
+            <input id="aiInput" class="ai-input" type="text" placeholder='Try: "Log 30 pushups" or "Add buy milk to todos"'>
+            <button id="sendBtn" class="ai-btn">Send</button>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button id="voiceBtn" class="ai-btn" style="flex: 1;">🎙️ Voice</button>
+            <button id="stopBtn" class="ai-btn" style="flex: 1; background: #ff4d4d;">Stop</button>
+            <button id="muteBtn" class="ai-btn" style="flex: 1; background: #ff9500;">🔇 Mute</button>
+        </div>
+        
+        <div id="aiResponse" class="ai-response">
+            Ready! Try a command or click voice to speak.
+        </div>
+        
+        <div class="quick-commands">
+            <div class="quick-cmd" onclick="quickCmd('Log 20 pushups')">Log Workout</div>
+            <div class="quick-cmd" onclick="quickCmd('Spent 500 on groceries')">Log Expense</div>
+            <div class="quick-cmd" onclick="quickCmd('Add task buy milk')">Add Task</div>
+            <div class="quick-cmd" onclick="quickCmd('Add habit daily meditation')">Add Habit</div>
+            <div class="quick-cmd" onclick="quickCmd('Write journal feeling great today')">Write Journal</div>
+            <div class="quick-cmd" onclick="quickCmd('Show my summary')">View Summary</div>
+        </div>
+        
+        <div class="voice-status">
+            <span id="status">Status: <span id="statusText">Idle</span></span>
+            <span class="status-indicator" id="indicator" style="display: none;"></span>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    © 2025 Mitra AI — Intelligent Agent Prototype
+</footer>
+
+<script>
+    const aiPanel = document.getElementById('aiPanel');
+    const aiInput = document.getElementById('aiInput');
+    const aiResponse = document.getElementById('aiResponse');
+    const statusText = document.getElementById('statusText');
+    const indicator = document.getElementById('indicator');
+    
+    // Initialize Voice Manager
+    const voiceManager = new VoiceManager();
+    
+    // Toggle AI Panel
+    function toggleAI() {
+        aiPanel.classList.toggle('minimized');
+    }
+    
+    // Voice event handlers
+    function onVoiceResult(text) {
+        aiInput.value = text;
+        handleCommand(text);
+    }
+    
+    function onVoiceError(error) {
+        console.error('Voice error:', error);
+        aiResponse.textContent = '❌ Voice Error: ' + error;
+    }
+    
+    function onVoiceStatusChange(status, isActive) {
+        statusText.textContent = status;
+        indicator.style.display = isActive ? 'inline-block' : 'none';
+        
+        // Update input placeholder during listening
+        if (status.includes('Processing:')) {
+            aiInput.value = status.replace('Processing: ', '');
+        }
+    }
+    
+    // Enhanced text-to-speech with better voice selection
+    function speakText(text) {
+        // Clean text for better speech
+        const cleanText = text
+            .replace(/[✅❌🤔📝💰📔💊🌱]/g, '') // Remove emojis
+            .replace(/\n/g, '. ') // Replace newlines with pauses
+            .trim();
+            
+        voiceManager.speak(cleanText, () => {
+            statusText.textContent = 'Ready';
+        });
+    }
+    
+    // Handle AI Commands with voice response
+    async function handleCommand(text) {
+        if (!text.trim()) return;
+        
+        aiResponse.textContent = '🤔 Processing...';
+        statusText.textContent = 'Thinking...';
+        
+        try {
+            const reply = await window.askAI(text);
+            aiResponse.textContent = reply;
+            statusText.textContent = 'Ready';
+            
+            // Speak the response (only if it's not too long)
+            if (reply.length < 200) {
+                speakText(reply);
+            } else {
+                statusText.textContent = 'Response ready (too long to speak)';
+            }
+        } catch (error) {
+            const errorMsg = '❌ Error: ' + error.message;
+            aiResponse.textContent = errorMsg;
+            statusText.textContent = 'Error';
+            speakText('Sorry, there was an error processing your request.');
+        }
+    }
+    
+    function quickCmd(cmd) {
+        aiInput.value = cmd;
+        handleCommand(cmd);
+    }
+    
+    // Event Listeners
+    document.getElementById('sendBtn').onclick = () => handleCommand(aiInput.value);
+    
+    aiInput.onkeypress = (e) => {
+        if (e.key === 'Enter') handleCommand(aiInput.value);
+    };
+    
+    document.getElementById('voiceBtn').onclick = () => {
+        if (!voiceManager.isSupported()) {
+            alert('Voice features not supported in this browser. Please use Chrome or Edge.');
+            return;
+        }
+        
+        if (!voiceManager.isListening) {
+            voiceManager.startListening(onVoiceResult, onVoiceError, onVoiceStatusChange);
+        }
+    };
+    
+    document.getElementById('stopBtn').onclick = () => {
+        voiceManager.stopListening();
+        voiceManager.stopSpeaking();
+        statusText.textContent = 'Stopped';
+        indicator.style.display = 'none';
+    };
+    
+    document.getElementById('muteBtn').onclick = () => {
+        voiceManager.stopSpeaking();
+        statusText.textContent = 'Speech muted';
+    };
+    
+    // Check voice support on load
+    if (!voiceManager.isSupported()) {
+        statusText.textContent = 'Voice not supported';
+        document.getElementById('voiceBtn').disabled = true;
+    }
+    
+    // Make functions global
+    window.quickCmd = quickCmd;
+    window.toggleAI = toggleAI;
+</script>
+
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mitra AI — Healthcare (Medication Tablet)</title>
+<style>
+body{margin:0;background:url("https://images.unsplash.com/photo-1526256262350-7da7584cf5eb?auto=format&fit=crop&w=1600&q=80") no-repeat center center fixed;background-size:cover;font-family:Poppins,sans-serif;color:#fff}
+body::before{content:"";position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(3px);z-index:-1}
+.header{max-width:1100px;margin:22px auto;padding:10px;display:flex;align-items:center;gap:12px}
+.h-title{flex:1;font-size:1.6rem;color:#ffabab;font-weight:700}
+.controls{display:flex;gap:8px;align-items:center}
+.btn{padding:8px 12px;border-radius:10px;border:0;cursor:pointer;font-weight:700}
+.btn-voice{background:#ffabab;color:#041207}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.08);color:#fff}
+.container{max-width:1100px;margin:14px auto;padding:0 18px;display:grid;grid-template-columns:2fr 380px;gap:18px}
+.card{background:rgba(255,150,150,0.06);padding:18px;border-radius:12px;border:1px solid rgba(255,150,150,0.12);backdrop-filter:blur(6px)}
+.title-small{color:#ffb5b5}
+.input-row{display:flex;gap:8px;margin-top:12px}
+.input-row input, .input-row select{flex:1;padding:10px;border-radius:8px;border:none;background:rgba(0,0,0,0.35);color:#fff}
+.list{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.med-item{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:10px;background:rgba(0,0,0,0.35);border-left:6px solid #ffabab}
+.checkbox{width:20px;height:20px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.small{font-size:0.95rem;color:#ffe7e7}
+.level{height:9px;border-radius:6px;background:#071217;border:1px solid #183040;overflow:hidden;width:140px}
+.level>div{height:100%;width:6%;background:linear-gradient(90deg,#ffbaba,#ffd6d6)}
+.back{display:block;text-align:center;color:#ffabab;text-decoration:none;margin:18px auto}
+.note{font-size:0.9rem;color:#ffdede;margin-top:8px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="h-title">Mitra AI — Healthcare (Medication Tablet)</div>
+  <div class="controls">
+    <button id="startMic" class="btn btn-voice">Start</button>
+    <button id="stopMic" class="btn btn-ghost">Stop</button>
+    <label class="small">Wake <input id="wake" type="checkbox" checked></label>
+    <div class="level"><div id="meter"></div></div>
+  </div>
+</div>
+
+<div class="container">
+  <main class="card">
+    <h3 style="margin:0;color:#ffabab">Medication / Health Notes</h3>
+    <p class="small">This page acts like a medication tablet: schedule meds, mark taken/un-taken, and add health notes by voice or text.</p>
+
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <input id="medName" placeholder="Medicine name (e.g., Paracetamol)" />
+      <select id="medTime"><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Night</option></select>
+      <input id="medDose" placeholder="Dose (e.g., 500 mg)" style="width:160px"/>
+      <button id="medAdd" class="btn btn-voice">Add</button>
+    </div>
+
+    <div class="note">Try voice: "add med paracetamol morning 500", or "took paracetamol morning"</div>
+
+    <div class="list" id="medList"></div>
+  </main>
+
+  <aside class="card">
+    <h3 style="margin:0;color:#ffabab">Today Tablet</h3>
+    <p class="small">Tap a pill to toggle Taken / Not taken. This view is your day’s medication checklist.</p>
+    <div id="todayList" style="margin-top:12px"></div>
+  </aside>
+</div>
+
+<a class="back" href="index.html">← Back to Dashboard</a>
+
+<script>
+/* model */
+let meds = JSON.parse(localStorage.getItem("mitraMeds")||"[]");
+function save(){ localStorage.setItem("mitraMeds", JSON.stringify(meds)); render(); renderToday(); }
+function render(){
+  const el = document.getElementById("medList"); el.innerHTML="";
+  if(!meds.length) el.innerHTML = '<div class="small">No meds scheduled</div>';
+  meds.slice().reverse().forEach((m,i)=>{ const idx=meds.length-1-i; const d = document.createElement("div"); d.className="med-item"; d.innerHTML = `<div><strong>${m.name}</strong><div class="small">${m.time} • ${m.dose} • ${m.when}</div></div>
+    <div><button class="del" data-i="${idx}">🗑</button></div>`; el.appendChild(d); });
+  el.querySelectorAll(".del").forEach(b=>b.onclick=()=>{ meds.splice(+b.dataset.i,1); save(); });
+}
+function renderToday(){
+  const list = document.getElementById("todayList"); list.innerHTML="";
+  // show meds with taken flag (today)
+  const today = new Date().toISOString().slice(0,10);
+  const todays = meds.filter(m => (m.scheduleDate || today) === today || (m.repeat||"daily")==="daily");
+  if(!todays.length) { list.innerHTML = '<div class="small">No meds for today</div>'; return; }
+  todays.forEach((m,i)=>{ const div=document.createElement("div"); div.className="med-item"; const taken = !!m.takenToday; div.innerHTML = `<div><strong>${m.name}</strong><div class="small">${m.time} • ${m.dose}</div></div>
+    <div style="display:flex;gap:8px;align-items:center"><div class="checkbox" data-i="${i}">${taken?"✓":""}</div></div>`; list.appendChild(div); });
+  list.querySelectorAll(".checkbox").forEach(cb=>cb.onclick=()=>{ const i=+cb.dataset.i; // toggle corresponding in meds (approx mapping)
+    // naive: toggle first matching not-yet-toggled med
+    const match = meds.findIndex(x=>x.name===todays[i].name && x.time===todays[i].time);
+    if(match>=0){ meds[match].takenToday = !meds[match].takenToday; save(); } });
+}
+
+/* add med */
+document.getElementById("medAdd").onclick = ()=>{
+  const name = document.getElementById("medName").value.trim();
+  const time = document.getElementById("medTime").value;
+  const dose = document.getElementById("medDose").value.trim();
+  if(!name){ alert("Enter name"); return; }
+  meds.push({ name, time, dose: dose||"—", when: new Date().toISOString(), takenToday:false, repeat:"daily" });
+  document.getElementById("medName").value=""; document.getElementById("medDose").value="";
+  save();
+};
+
+/* voice */
+const meter = document.getElementById("meter");
+let rec=null,micStream=null,analyser=null,manualStop=false;
+async function warm(){ if(micStream) return; micStream=await navigator.mediaDevices.getUserMedia({audio:true}); const ctx=new (window.AudioContext||window.webkitAudioContext)(); const src=ctx.createMediaStreamSource(micStream); analyser=ctx.createAnalyser(); analyser.fftSize=1024; src.connect(analyser); (function loop(){ if(!analyser) return; const arr=new Uint8Array(analyser.fftSize); analyser.getByteTimeDomainData(arr); let peak=0; for(let v of arr){ const p=Math.abs(v-128); if(p>peak) peak=p; } meter.style.width=Math.min(100,Math.max(6,(peak/64)*100))+'%'; requestAnimationFrame(loop); })(); }
+function SR(){ return window.SpeechRecognition || window.webkitSpeechRecognition; }
+function start(){ const K=SR(); if(!K){ alert("SpeechRecognition not available"); return; } manualStop=false; rec=new K(); rec.lang="en-IN"; rec.interimResults=false; rec.continuous=false; rec.onresult=(ev)=>{ for(let i=ev.resultIndex;i<ev.results.length;i++){ if(ev.results[i].isFinal) handleVoice(ev.results[i][0].transcript.trim()); } }; rec.onend=()=>{ if(!manualStop) setTimeout(()=>{ try{ rec.start(); }catch{} },150); }; try{ rec.start(); }catch(e){} }
+function stop(){ manualStop=true; try{ rec && rec.stop(); }catch{} }
+document.getElementById("startMic").onclick = async ()=>{ try{ await warm(); }catch(e){ alert("Allow mic"); return; } start(); };
+document.getElementById("stopMic").onclick = ()=> stop();
+
+function handleVoice(txt){
+  const t = txt.toLowerCase();
+  const wakeOn = document.getElementById("wake").checked;
+  let cmd = t;
+  if(wakeOn){
+    if(cmd.startsWith("hey mitra")) cmd = cmd.replace(/^hey mitra[, ]*/,"");
+    else if(cmd.startsWith("mitra")) cmd = cmd.replace(/^mitra[, ]*/,"");
+    else return;
+  }
+  // parse: add med <name> <time> <dose>
+  let m = cmd.match(/^(?:add|i took|took)\s+med(?:ication)?\s+([a-z0-9 ]+)\s*(morning|afternoon|evening|night)?\s*([0-9]+(?:mg)?)?/);
+  if(m){
+    const name = (m[1]||"").trim();
+    const time = (m[2]||"Morning").trim();
+    const dose = (m[3]||"").trim();
+    if(cmd.startsWith("took") || cmd.startsWith("i took") || cmd.includes("took")){
+      // mark taken (find first scheduled)
+      const idx = meds.findIndex(x=>x.name.toLowerCase().includes(name.toLowerCase()) && x.time.toLowerCase().includes(time.toLowerCase()));
+      if(idx>=0){ meds[idx].takenToday = true; save(); return; }
+    } else {
+      meds.push({ name, time: time||"Morning", dose: dose||"—", when:new Date().toISOString(), takenToday:false, repeat:"daily" });
+      save(); return;
+    }
+  }
+  // simple add med: "add med paracetamol morning 500"
+  m = cmd.match(/^(?:add|add med|add medication)\s+(.+)$/);
+  if(m){ const parts = m[1].trim().split(/\s+/); const name = parts.slice(0, parts.length-2).join(" ") || parts[0]; const time = parts[parts.length-2]||"Morning"; const dose = parts[parts.length-1]||"—"; meds.push({ name, time, dose, when:new Date().toISOString(), takenToday:false, repeat:"daily"}); save(); return; }
+}
+
+render(); renderToday();
+</script>
+
+</body>
+</html>

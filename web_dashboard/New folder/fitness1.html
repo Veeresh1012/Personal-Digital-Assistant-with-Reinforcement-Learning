@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mitra AI — Fitness Coach (IRON GYM PRO — Help + Stop Fix)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{ --bg:#0a0f14; --bg2:#0b1219; --edge:#223040; --ink:#e8f0ff; --muted:#9bb0c8; --brand:#86ff7b; }
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);font-family:Inter,system-ui;background:
+radial-gradient(1200px 600px at 85% -10%, rgba(134,166,255,.18) 0%, transparent 60%),
+radial-gradient(1000px 600px at 10% -10%, rgba(134,255,123,.16) 0%, transparent 60%),
+linear-gradient(180deg,#0a0f14,#0b1219 60%,#0a0f14);min-height:100vh}
+body:before{content:"";position:fixed;inset:-60px;opacity:.06;pointer-events:none;
+background-image:url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"120\" viewBox=\"0 0 200 120\"><g fill=\"none\" stroke=\"%23bcd2ff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" opacity=\".8\"><rect x=\"10\" y=\"46\" width=\"24\" height=\"28\" rx=\"4\"/><rect x=\"166\" y=\"46\" width=\"24\" height=\"28\" rx=\"4\"/><path d=\"M34 60h132\"/><path d=\"M70 44v32M130 44v32\"/></g></svg>');
+background-size:220px 140px;animation:slow 55s linear infinite}
+@keyframes slow{from{transform:translateY(0)}to{transform:translateY(140px)}}
+.wrap{max-width:1280px;margin:0 auto;padding:14px}
+header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,rgba(10,15,20,.92),rgba(10,15,20,.75));backdrop-filter:blur(8px);border-bottom:1px solid var(--edge)}
+h1{margin:0;line-height:1.1}
+h1 .sub{display:block}
+.badge{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--edge);background:linear-gradient(180deg,#0d141c,#0b1118);margin-left:8px}
+button{border:0;border-radius:14px;padding:10px 16px;font-weight:700;cursor:pointer}
+.btn{background:linear-gradient(180deg,var(--brand),#57e552);color:#041407}
+.ghost{background:transparent;color:var(--ink);border:1px dashed var(--edge)}
+select,input{background:#0e141c;border:1px solid #1e2a36;color:var(--ink);border-radius:12px;padding:10px;outline:none}
+.grid{display:grid;grid-template-columns:520px 1fr;gap:22px}
+.card{background:linear-gradient(180deg,#0e1620,#0d141c);border:1px solid var(--edge);border-radius:16px;padding:16px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.col{display:flex;flex-direction:column;gap:12px}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;justify-content:space-between;gap:8px;background:#0f151f;border:1px dashed #2a3746;border-radius:14px;padding:10px}
+.tab{padding:6px 10px;border-radius:999px;background:#101a26;border:1px solid #2b3b4f;font-size:12px}
+.chip{padding:4px 8px;border-radius:999px;border:1px solid #2a3a4e;background:#0e1620;font-size:12px}
+canvas{width:100%;height:300px;background:#0c141d;border:1px solid #223040;border-radius:14px}
+.muted{color:var(--muted);font-size:12px}
+.level{height:10px;border-radius:6px;background:#0a1117;border:1px solid #203041;overflow:hidden}
+.level>div{height:100%;width:8%;background:linear-gradient(90deg,#6dffd1,#86a6ff);transition:width .09s}
+.log{position:fixed;right:10px;bottom:10px;width:360px;max-height:42vh;overflow:auto;background:#0e1620;border:1px solid #2a3a4e;border-radius:12px;padding:10px;font-size:12px;color:#b7c7de}
+/* Help modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:50}
+.sheet{max-width:860px;width:92%;background:#0e1620;border:1px solid #2a3a4e;border-radius:16px;padding:16px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.sheet h3{margin:0 0 10px 0}
+.sheet .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sheet .box{background:#0f151f;border:1px dashed #2a3746;border-radius:12px;padding:10px}
+@media (max-width:1100px){.grid{grid-template-columns:1fr}.log{display:none}.sheet .grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap row" style="align-items:flex-start">
+    <div><h1>🏋️ Mitra AI — <span class="sub">Fitness Coach</span></h1></div>
+    <span class="badge">IRON GYM PRO</span>
+    <div style="flex:1"></div>
+    <div class="row" style="gap:14px;align-items:center">
+      <button id="micStart" class="btn">Start</button>
+      <button id="micStop" class="ghost">Stop</button>
+      <button id="help" class="ghost">Help / Commands</button>
+      <div class="muted">Lang:
+        <select id="lang">
+          <option value="en-US">English (US)</option>
+          <option value="en-IN" selected>English (IN)</option>
+          <option value="en-GB">English (GB)</option>
+        </select>
+      </div>
+      <label class="muted">Interim <input type="checkbox" id="interim" checked></label>
+      <label class="muted">Wake word <input type="checkbox" id="wake"></label>
+      <div class="level" style="width:180px"><div id="level"></div></div>
+      <span class="muted">Status: <span id="micStatus">Idle</span></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid">
+    <section class="col">
+      <div class="card">
+        <h3>Today's Plan <span class="muted" id="planCount"></span></h3>
+        <div class="row">
+          <select id="planDay"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option></select>
+          <input id="planExercise" placeholder="Exercise (e.g., Deadlift)">
+          <input id="planSets" type="number" placeholder="Sets">
+          <input id="planReps" type="number" placeholder="Reps">
+          <button id="addPlan" class="btn">Add</button>
+        </div>
+        <div id="planList" class="list"></div>
+        <div class="row"><span class="chip">Try: plan monday deadlift sets 5 reps 5</span></div>
+      </div>
+
+      <div class="card">
+        <h3>Goals</h3>
+        <div class="row">
+          <select id="goalType"><option value="weight">Weight</option><option value="steps">Daily Steps</option><option value="calories">Net Calories</option></select>
+          <input id="goalValue" type="number" placeholder="Target">
+          <button id="setGoal" class="btn">Set</button>
+        </div>
+        <div id="goalView" class="muted">No goals set.</div>
+      </div>
+
+      <div class="card">
+        <h3>Quick Log <span class="muted" id="logCount"></span></h3>
+        <div class="row">
+          <input id="logExercise" placeholder="Exercise">
+          <input id="logSets" type="number" placeholder="Sets">
+          <input id="logReps" type="number" placeholder="Reps">
+          <input id="logWeight" type="number" placeholder="kg (optional)">
+          <button id="addLog" class="btn">Log</button>
+          <button id="undoLog" class="ghost">Undo last</button>
+        </div>
+        <div id="logList" class="list"></div>
+      </div>
+    </section>
+
+    <section class="col">
+      <div class="card">
+        <h3>Progress</h3>
+        <div class="row"><div class="tab">Weight</div><div class="tab">Calories</div><div class="tab">Steps</div></div>
+        <canvas id="chart"></canvas>
+        <div class="row">
+          <input id="calIn" type="number" placeholder="Calories In">
+          <input id="calOut" type="number" placeholder="Calories Out">
+          <input id="steps" type="number" placeholder="Steps">
+          <button id="addDay" class="btn">Add Day</button>
+          <button id="resetToday" class="ghost">Reset Today</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Coach</h3>
+        <div id="coachTip" class="muted">Log a few days to unlock tips.</div>
+        <div class="row"><span class="chip">Say: coach tip • coach plan • what's my plan today</span></div>
+      </div>
+
+      <div class="card">
+        <h3>Type a command (fallback)</h3>
+        <div class="row">
+          <input id="cmd" placeholder='e.g., plan monday squats sets 5 reps 5' style="flex:1">
+          <button id="run" class="btn">Run</button>
+        </div>
+        <div class="muted">Same parser as voice. Use if mic permission is blocked.</div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- Help / Commands Modal -->
+<div class="modal" id="helpModal" aria-hidden="true">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <h3 id="helpTitle">Help / Commands</h3>
+    <div class="grid2">
+      <div class="box">
+        <b>Planning</b>
+        <ul>
+          <li>plan monday deadlift sets 5 reps 5</li>
+          <li>remove plan deadlift</li>
+          <li>clear plan monday</li>
+        </ul>
+      </div>
+      <div class="box">
+        <b>Logging</b>
+        <ul>
+          <li>log push ups sets 3 reps 12 (kg 0)</li>
+          <li>i did 15 push ups</li>
+        </ul>
+      </div>
+      <div class="box">
+        <b>Daily Stats</b>
+        <ul>
+          <li>i walked 3000 steps</li>
+          <li>i ate 700 calories / i burned 200 calories</li>
+          <li>add day in 2200 out 500 steps 8000</li>
+          <li>reset today</li>
+        </ul>
+      </div>
+      <div class="box">
+        <b>Goals & Coach</b>
+        <ul>
+          <li>set goal weight 68</li>
+          <li>set goal steps 8000</li>
+          <li>coach tip • coach plan</li>
+        </ul>
+      </div>
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-top:12px">
+      <button id="closeHelp" class="ghost">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="log" id="log"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const S={ plan:{}, logs:[], daily:[], goals:{}, undo:[] };
+function logln(...a){ const el=$("#log"); const line=document.createElement("div"); line.textContent=a.join(" "); el.prepend(line); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function cap(s){ return s? s[0].toUpperCase()+s.slice(1):s; }
+function toast(msg){ const t=document.createElement("div"); t.textContent=msg; t.style.position="fixed"; t.style.bottom="18px"; t.style.left="50%"; t.style.transform="translateX(-50%)"; t.style.background="rgba(15,22,31,.96)"; t.style.border="1px solid #2a3946"; t.style.padding="10px 14px"; t.style.borderRadius="12px"; document.body.appendChild(t); setTimeout(()=>t.remove(),1500); }
+
+// UI button wiring
+$("#addPlan").onclick=()=>{ const d=cap($("#planDay").value), ex=$("#planExercise").value.trim(), sets=+$("#planSets").value, reps=+$("#planReps").value;
+  if(!ex||!sets||!reps){ toast("Fill exercise/sets/reps"); return; } S.plan[d]=S.plan[d]||[]; S.plan[d].push({ex,sets,reps}); renderPlan(); toast("Added to plan"); };
+$("#setGoal").onclick=()=>{ const type=$("#goalType").value, v=+$("#goalValue").value; if(!v){ toast("Enter target"); return; } S.goals[type]=v; renderGoals(); toast("Goal set"); };
+$("#addLog").onclick=()=>{ const ex=$("#logExercise").value.trim(), sets=+$("#logSets").value, reps=+$("#logReps").value, kg=$("#logWeight").value?+$("#logWeight").value:null; if(!ex||!sets||!reps){ toast("Fill exercise/sets/reps"); return; } const e={ts:Date.now(),ex,sets,reps,kg}; S.logs.push(e); S.undo.push({type:"log",value:e}); renderLogs(); toast("Logged"); };
+$("#undoLog").onclick=()=>{ const u=S.undo.pop(); if(u&&u.type==='log'){ S.logs.pop(); renderLogs(); toast("Undid last log"); } };
+$("#addDay").onclick=()=>{ const d=today(); let row=S.daily.find(x=>x.date===d); if(!row){ row={date:d,calIn:0,calOut:0,steps:0,weight:null}; S.daily.push(row); } row.calIn+=+($("#calIn").value||0); row.calOut+=+($("#calOut").value||0); row.steps+=+($("#steps").value||0); drawChart(); toast("Day updated"); };
+$("#resetToday").onclick=()=>{ const d=today(); S.daily=S.daily.filter(x=>x.date!==d); drawChart(); toast("Reset today"); };
+$("#run").onclick=()=>{ const v=$("#cmd").value.trim(); if(v) handleTranscript(v); };
+
+// Help modal wiring
+const helpModal=$("#helpModal");
+$("#help").onclick=()=>{ helpModal.style.display="flex"; helpModal.setAttribute("aria-hidden","false"); };
+$("#closeHelp").onclick=()=>{ helpModal.style.display="none"; helpModal.setAttribute("aria-hidden","true"); };
+helpModal.addEventListener("click",(e)=>{ if(e.target===helpModal){ helpModal.style.display="none"; helpModal.setAttribute("aria-hidden","true"); }});
+document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") { helpModal.style.display="none"; helpModal.setAttribute("aria-hidden","true"); } });
+
+function renderPlan(){ const el=$("#planList"); el.innerHTML=""; let total=0; Object.entries(S.plan).forEach(([d,list])=>{ total+=list.length; const div=document.createElement("div"); div.className="item"; div.innerHTML=`<div><b>${d}</b><div class="muted">${list.length} items</div></div><div>${list.map((x,i)=>`<span class="chip">${x.ex} ${x.sets}×${x.reps} <a data-d='${d}' data-i='${i}'>✕</a></span>`).join(" ")}</div>`; el.append(div); }); $("#planCount").textContent=total?`${total} items`:""; el.querySelectorAll("a").forEach(a=>a.onclick=()=>{ const d=a.dataset.d,i=+a.dataset.i; S.plan[d].splice(i,1); if(!S.plan[d].length) delete S.plan[d]; renderPlan(); }); if(!el.children.length) el.innerHTML='<div class="muted">No plan yet.</div>'; }
+function renderLogs(){ const el=$("#logList"); el.innerHTML=""; $("#logCount").textContent=S.logs.length?`${S.logs.length} logs`:""; S.logs.slice(-20).reverse().forEach(l=>{ const d=document.createElement("div"); d.className="item"; d.innerHTML=`<div><b>${l.ex}</b> <span class="muted">${l.sets}×${l.reps}${l.kg?(" • "+l.kg+"kg"):""}</span></div><div class="muted">${new Date(l.ts).toLocaleString()}</div>`; el.append(d); }); if(!el.children.length) el.innerHTML='<div class="muted">No logs yet.</div>'; }
+function renderGoals(){ const parts=[]; if(S.goals.weight) parts.push(`Weight: ${S.goals.weight}kg`); if(S.goals.steps) parts.push(`Steps: ${S.goals.steps}/day`); if(S.goals.calories) parts.push(`Net calories: ${S.goals.calories}/day`); $("#goalView").textContent=parts.join(" • ")||"No goals set."; }
+function drawChart(){ const cvs=document.getElementById("chart"), ctx=cvs.getContext("2d"); ctx.clearRect(0,0,cvs.width,cvs.height); const data=S.daily.slice(-30), W=cvs.width,H=cvs.height; const xs=data.map((_,i)=> i/(Math.max(1,data.length-1))*(W-40)+20); function scale(a){ if(!a.length)return[]; const mn=Math.min(...a),mx=Math.max(...a),rg=(mx-mn)||1; return a.map(v=>H-((v-mn)/rg)*(H-30)-15);} const yS=scale(data.map(d=>d.steps||0)); const yN=scale(data.map(d=>(d.calIn||0)-(d.calOut||0))); ctx.strokeStyle="#263240"; ctx.beginPath(); ctx.moveTo(20,10); ctx.lineTo(20,H-10); ctx.lineTo(W-10,H-10); ctx.stroke(); function line(y,c){ ctx.strokeStyle=c; ctx.lineWidth=2; ctx.beginPath(); y.forEach((v,i)=> i?ctx.lineTo(xs[i],v):ctx.moveTo(xs[0],y[0])); ctx.stroke(); } function dots(y,c){ ctx.fillStyle=c; y.forEach((v,i)=>{ ctx.beginPath(); ctx.arc(xs[i],v,2.5,0,Math.PI*2); ctx.fill(); }); } if(data.length){ line(yS,"#86ff7b"); dots(yS,"#86ff7b"); line(yN,"#ffd166"); dots(yN,"#ffd166"); } }
+function renderAll(){ renderPlan(); renderLogs(); renderGoals(); drawChart(); } renderAll();
+
+// ----- Mic (with STOP fix) -----
+let micStream=null, analyser=null, raf=null, rec=null;
+let manualStop=false;   // user clicked Stop
+let autoRestart=false;  // controls onend restart
+
+async function warmMic(){
+  if(micStream) return;
+  try{
+    micStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const src=ctx.createMediaStreamSource(micStream);
+    analyser=ctx.createAnalyser(); analyser.fftSize=1024; src.connect(analyser);
+    const bar=document.querySelector(".level>div");
+    (function loop(){
+      if(!analyser) return;
+      const arr=new Uint8Array(analyser.fftSize); analyser.getByteTimeDomainData(arr);
+      let peak=0; for(let i=0;i<arr.length;i++){ const v=Math.abs(arr[i]-128); if(v>peak) peak=v; }
+      bar.style.width=Math.min(100,Math.max(8,(peak/64)*100))+'%';
+      raf=requestAnimationFrame(loop);
+    })();
+    logln("Mic stream OK");
+  }catch(e){ logln("Mic permission blocked"); throw e; }
+}
+
+function SR(){ return window.SpeechRecognition||window.webkitSpeechRecognition; }
+
+function startRec(){
+  const Klass=SR();
+  if(!Klass){ logln("No SpeechRecognition support"); return; }
+  manualStop=false;
+  autoRestart=true; // enable restart while actively listening
+
+  if(rec){ try{rec.onend=null; rec.onerror=null; rec.onresult=null; rec.stop();}catch{} }
+
+  rec=new Klass();
+  rec.lang=$("#lang").value;
+  rec.interimResults=$("#interim").checked;
+  rec.continuous=false;
+
+  rec.onstart=()=>{ $("#micStatus").textContent="Listening…"; logln("SR started", rec.lang); };
+  rec.onerror=(e)=>{ logln("SR error:", e.error); if(["no-speech","audio-capture","network"].includes(e.error)){ rec.lang=(rec.lang==="en-IN")?"en-US":"en-IN"; } };
+  rec.onend=()=>{
+    if(!manualStop && autoRestart){
+      setTimeout(()=>{ try{ rec.start(); }catch(err){ try{ startRec(); }catch{} } }, 180);
+    }else{
+      $("#micStatus").textContent="Idle";
+    }
+  };
+  rec.onresult=(ev)=>{
+    for(let i=ev.resultIndex;i<ev.results.length;i++){
+      const r=ev.results[i];
+      if(r.isFinal){
+        const text=(r[0]?.transcript||"").trim();
+        logln("Heard:", text);
+        handleTranscript(text);
+      }
+    }
+  };
+  try{ rec.start(); }catch(e){ logln("SR start failed"); }
+}
+
+async function stopRec(){
+  manualStop=true;     // signal user's explicit stop
+  autoRestart=false;   // block any restart
+  try{ rec && rec.stop(); }catch{}
+  try{ rec && rec.abort && rec.abort(); }catch{}
+  $("#micStatus").textContent="Idle";
+}
+
+$("#micStart").onclick=async()=>{ try{ await warmMic(); }catch{} startRec(); };
+$("#micStop").onclick=()=>stopRec();
+
+// Parser (shared with text fallback)
+function clean(t){ return t.replace(/\b(okay|ok|hmm|uh|um|like|you know|please)\b/gi," ").replace(/\s{2,}/g," ").trim(); }
+function handleTranscript(text){
+  let t=text.toLowerCase().trim();
+  if($("#wake").checked){
+    if(t.startsWith("hey mitra")) t=t.replace(/^hey mitra[, ]*/,"");
+    else if(t.startsWith("hi mitra")) t=t.replace(/^hi mitra[, ]*/,"");
+    else if(t.startsWith("mitra")) t=t.replace(/^mitra[, ]*/,"");
+    else { logln("Ignored (no wake)"); return; }
+  }
+  t=clean(t); logln("Cmd:", t);
+
+  if(t==="start listening"){ $("#micStart").click(); return; }
+  if(t==="stop listening"){ $("#micStop").click(); return; }
+
+  let m=t.match(/^(?:add )?plan (monday|tuesday|wednesday|thursday|friday|saturday|sunday) ([a-z0-9 .\-]+) sets (\d+) reps (\d+)$/);
+  if(m){ const d=cap(m[1]); const ex=m[2].trim(); const sets=+m[3], reps=+m[4]; S.plan[d]=S.plan[d]||[]; S.plan[d].push({ex,sets,reps}); renderPlan(); toast(`Planned ${ex} on ${d}`); return; }
+  m=t.match(/^remove plan ([a-z0-9 .\-]+)$/);
+  if(m){ const ex=m[1].trim().toLowerCase(); for(const d in S.plan){ S.plan[d]=(S.plan[d]||[]).filter(p=>p.ex.toLowerCase()!==ex); if(!S.plan[d].length) delete S.plan[d]; } renderPlan(); toast(`Removed ${m[1]}`); return; }
+  m=t.match(/^clear plan (monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/);
+  if(m){ const d=cap(m[1]); delete S.plan[d]; renderPlan(); toast(`Cleared ${d}`); return; }
+  m=t.match(/^delete plan (monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/);
+  if(m){ const d=cap(m[1]); delete S.plan[d]; renderPlan(); toast(`Deleted ${d}`); return; }
+
+  m=t.match(/^log ([a-z0-9 .\-]+) sets (\d+) reps (\d+)(?: (?:kg|weight) (\d+(?:\.\d+)?))?$/);
+  if(m){ const e={ts:Date.now(), ex:m[1].trim(), sets:+m[2], reps:+m[3], kg:m[4]?+m[4]:null}; S.logs.push(e); S.undo.push({type:"log", value:e}); renderLogs(); toast(`Logged ${e.ex} ${e.sets}×${e.reps}`); return; }
+  m=t.match(/^i did (\d+) ([a-z0-9 .\-]+)$/);
+  if(m){ const e={ts:Date.now(), ex:m[2].trim(), sets:1, reps:+m[1], kg:null}; S.logs.push(e); S.undo.push({type:"log", value:e}); renderLogs(); toast(`Logged ${m[1]} ${m[2]}`); return; }
+  m=t.match(/^(?:log weight|my weight is) (\d+(?:\.\d+)?)$/);
+  if(m){ const d=today(); let row=S.daily.find(x=>x.date===d); if(!row){ row={date:d,calIn:0,calOut:0,steps:0,weight:null}; S.daily.push(row); } row.weight=+m[1]; drawChart(); toast(`Weight ${m[1]}kg`); return; }
+  m=t.match(/^i walked (\d+) steps$/);
+  if(m){ const steps=+m[1]; const d=today(); let row=S.daily.find(x=>x.date===d); if(!row){ row={date:d,calIn:0,calOut:0,steps:0,weight:null}; S.daily.push(row); } row.steps+=steps; drawChart(); toast(`Steps +${steps}`); return; }
+  m=t.match(/^i ate (\d+) calories$/);
+  if(m){ const x=+m[1]; const d=today(); let row=S.daily.find(x=>x.date===d); if(!row){ row={date:d,calIn:0,calOut:0,steps:0,weight:null}; S.daily.push(row); } row.calIn+=x; drawChart(); toast(`Calories in +${x}`); return; }
+  m=t.match(/^i burned (\d+) calories$/);
+  if(m){ const x=+m[1]; const d=today(); let row=S.daily.find(x=>x.date===d); if(!row){ row={date:d,calIn:0,calOut:0,steps:0,weight:null}; S.daily.push(row); } row.calOut+=x; drawChart(); toast(`Calories out +${x}`); return; }
+  m=t.match(/^add day (?:calories )?in (\d+) out (\d+) steps (\d+)$/);
+  if(m){ const d=today(); let row=S.daily.find(x=>x.date===d); if(!row){ row={date:d,calIn:0,calOut:0,steps:0,weight:null}; S.daily.push(row); } row.calIn+=+m[1]; row.calOut+=+m[2]; row.steps+=+m[3]; drawChart(); toast("Day updated"); return; }
+
+  if(t==="reset today"){ const d=today(); S.daily = S.daily.filter(x=>x.date!==d); drawChart(); toast("Reset today"); return; }
+
+  m=t.match(/^set goal weight (\d+(?:\.\d+)?)$/); if(m){ S.goals.weight=+m[1]; renderGoals(); toast("Goal set"); return; }
+  m=t.match(/^set goal steps (\d+)$/); if(m){ S.goals.steps=+m[1]; renderGoals(); toast("Goal set"); return; }
+  m=t.match(/^set goal calories (\d+)$/); if(m){ S.goals.calories=+m[1]; renderGoals(); toast("Goal set"); return; }
+
+  if(t.includes("coach tip")){ $("#coachTip").textContent = "Hydrate, warm up, and keep form strict. Add 2k steps if below 6k."; toast("Tip updated"); return; }
+  if(t.includes("coach plan") || t.includes("what's my plan today") || t.includes("whats my plan today")){ const d=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date().getDay()]; const list=(S.plan[d]||[]).map(p=>`• ${p.ex} ${p.sets}×${p.reps}`).join("\n")||"No plan today."; alert(list); return; }
+  if(t==="show plan"){ renderPlan(); return; }
+  if(t==="show logs"){ renderLogs(); return; }
+  if(t==="show goals"){ renderGoals(); return; }
+  if(t==="show today"){ const d=today(); const row=S.daily.find(x=>x.date===d); alert(row? JSON.stringify(row,null,2) : "No data for today."); return; }
+
+  if(t==="undo last log"){ const u=S.undo.pop(); if(u && u.type==="log"){ S.logs.pop(); renderLogs(); toast("Undid last log"); } else { toast("Nothing to undo"); } return; }
+
+  toast("No match: " + text);
+}
+</script>
+</body>
+</html>
+

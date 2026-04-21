@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📅 My Optimized Schedule - Mitra AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .insights-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .insights-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .insight-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9ff;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            font-size: 1.05em;
+        }
+
+        .timeline {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .timeline h2 {
+            color: #667eea;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+
+        .timeline-item {
+            display: flex;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9ff, #ffffff);
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s;
+        }
+
+        .timeline-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .timeline-time {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            min-width: 100px;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-activity {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .timeline-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 8px;
+        }
+
+        .timeline-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .priority-10 { background: #ff4757; color: white; }
+        .priority-9 { background: #ff6348; color: white; }
+        .priority-8 { background: #ffa502; color: white; }
+        .priority-7 { background: #f6b93b; color: white; }
+        .priority-6 { background: #78e08f; color: white; }
+        .priority-5 { background: #38ada9; color: white; }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            font-size: 1.5em;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .balance-meter {
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .balance-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .empty-state h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .empty-state p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        
+        .schedule-input {
+            margin-bottom: 30px;
+        }
+        
+        .input-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .input-card h2 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .input-card p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .form-row input {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            outline: none;
+        }
+        
+        .form-row input:focus {
+            border-color: #667eea;
+        }
+        
+        .form-row input[type="time"] {
+            width: 120px;
+        }
+        
+        .form-row input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .form-row input[type="number"] {
+            width: 120px;
+        }
+        
+        .user-activities {
+            margin: 25px 0;
+        }
+        
+        .user-activities h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .activity-info {
+            flex: 1;
+        }
+        
+        .activity-time {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .activity-name {
+            margin: 2px 0;
+        }
+        
+        .activity-duration {
+            font-size: 0.9em;
+            color: #888;
+        }
+        
+        .activity-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 0.8em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .btn-edit {
+            background: #ffa502;
+            color: white;
+        }
+        
+        .btn-delete {
+            background: #ff4757;
+            color: white;
+        }
+        
+        .quick-templates {
+            margin-top: 25px;
+        }
+        
+        .quick-templates h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .template-btn {
+            padding: 8px 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            background: #f0f0f0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .template-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .editable {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .editable:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .editing {
+            background: rgba(102, 126, 234, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 My Optimized Schedule</h1>
+            <p>Create your schedule and let AI agents optimize it for better productivity and balance</p>
+            <div class="action-bar">
+                <button class="btn btn-primary" onclick="showScheduleInput()">➕ Create My Schedule</button>
+                <button class="btn btn-primary" onclick="optimizeSchedule()" id="optimizeBtn" style="display:none">🤖 AI Optimize</button>
+                <button class="btn btn-secondary" onclick="window.location.href='index.html'">🏠 Back to Dashboard</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Analyzing your data and optimizing schedule...</p>
+        </div>
+
+        <div id="scheduleContent" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>⚖️ Balance Score</h3>
+                    <div class="stat-value" id="balanceScore">--</div>
+                    <div class="stat-label" id="balanceLabel">Out of 100</div>
+                    <div class="balance-meter">
+                        <div class="balance-fill" id="balanceFill" style="width: 0%">0%</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>📋 Total Activities</h3>
+                    <div class="stat-value" id="totalActivities">--</div>
+                    <div class="stat-label">Scheduled today</div>
+                </div>
+                <div class="stat-card">
+                    <h3>💼 Work Time</h3>
+                    <div class="stat-value" id="workTime">--</div>
+                    <div class="stat-label">Minutes</div>
+                </div>
+                <div class="stat-card">
+                    <h3>💪 Health Time</h3>
+                    <div class="stat-value" id="healthTime">--</div>
+                    <div class="stat-label">Minutes</div>
+                </div>
+            </div>
+
+            <div class="insights-section">
+                <h2>💭 AI Insights</h2>
+                <div id="insightsContainer"></div>
+            </div>
+
+            <div class="timeline">
+                <h2>📋 Today's Timeline</h2>
+                <div id="timelineContainer"></div>
+            </div>
+        </div>
+
+        <div id="scheduleInput" class="schedule-input" style="display: block;">
+            <div class="input-card">
+                <h2>📝 Create Your Daily Schedule</h2>
+                <p>Add your activities and let AI agents optimize them for better balance</p>
+                
+                <div class="activity-form">
+                    <div class="form-row">
+                        <input type="time" id="activityTime" placeholder="Time">
+                        <input type="text" id="activityName" placeholder="Activity (e.g., Morning workout, Team meeting)">
+                        <input type="number" id="activityDuration" placeholder="Duration (min)" min="5" max="480">
+                        <button class="btn btn-primary" onclick="addActivity()">Add</button>
+                    </div>
+                </div>
+                
+                <div id="userActivities" class="user-activities">
+                    <h3>Your Activities:</h3>
+                    <div id="activitiesList"></div>
+                </div>
+                
+                <div class="quick-templates">
+                    <h3>Quick Templates:</h3>
+                    <button class="template-btn" onclick="loadTemplate('work')">Work Day</button>
+                    <button class="template-btn" onclick="loadTemplate('weekend')">Weekend</button>
+                    <button class="template-btn" onclick="loadTemplate('study')">Study Day</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <h2>📭 No Schedule Yet</h2>
+            <p>Click "Create My Schedule" to start building your daily plan!</p>
+            <button class="btn btn-primary" onclick="showScheduleInput()">➕ Create Schedule</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+
+        async function generateSchedule() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('scheduleContent').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_URL}/schedule`);
+                const data = await response.json();
+                
+                displaySchedule(data);
+            } catch (error) {
+                console.error('Error generating schedule:', error);
+                alert('Failed to generate schedule. Make sure the backend is running!');
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+            }
+        }
+
+        function displaySchedule(data) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('scheduleContent').style.display = 'block';
+
+            // Display statistics
+            const balanceScore = Math.round(data.balanceScore || 0);
+            const workTime = data.schedule.filter(s => s.type === 'task').reduce((sum, s) => sum + s.duration, 0);
+            const healthTime = data.schedule.filter(s => ['fitness', 'wellness', 'medication'].includes(s.type)).reduce((sum, s) => sum + s.duration, 0);
+            
+            document.getElementById('balanceScore').textContent = balanceScore;
+            document.getElementById('balanceLabel').textContent = data.insights?.workLifeBalance || 'Calculating...';
+            document.getElementById('totalActivities').textContent = data.totalActivities || data.schedule.length;
+            document.getElementById('workTime').textContent = workTime;
+            document.getElementById('healthTime').textContent = healthTime;
+
+            // Animate balance meter
+            setTimeout(() => {
+                const fill = document.getElementById('balanceFill');
+                fill.style.width = balanceScore + '%';
+                fill.textContent = balanceScore + '%';
+            }, 100);
+
+            // Display insights
+            const insightsContainer = document.getElementById('insightsContainer');
+            const insights = data.insights?.recommendations || [
+                `Balance Score: ${balanceScore}/100`,
+                `Work Time: ${workTime} minutes`,
+                `Health Time: ${healthTime} minutes`
+            ];
+            insightsContainer.innerHTML = insights.map(insight => 
+                `<div class="insight-item">${insight}</div>`
+            ).join('');
+
+            // Display timeline
+            const timelineContainer = document.getElementById('timelineContainer');
+            const sortedSchedule = data.schedule.sort((a, b) => {
+                const timeA = a.time.includes(':') ? a.time : `${String(a.time).padStart(2, '0')}:00`;
+                const timeB = b.time.includes(':') ? b.time : `${String(b.time).padStart(2, '0')}:00`;
+                return timeA.localeCompare(timeB);
+            });
+            
+            timelineContainer.innerHTML = sortedSchedule.map(item => {
+                const timeStr = item.time.includes(':') ? item.time : formatTime(item.time);
+                const priorityClass = `priority-${item.priority}`;
+                const flexibility = item.flexible ? 'Flexible' : 'Fixed';
+                
+                return `
+                    <div class="timeline-item">
+                        <div class="timeline-time">${timeStr}</div>
+                        <div class="timeline-content">
+                            <div class="timeline-activity">${item.activity}</div>
+                            <div class="timeline-meta">
+                                <span>⏱️ ${item.duration} min</span>
+                                <span>🤖 ${item.agent}</span>
+                                <span class="priority-badge ${priorityClass}">Priority ${item.priority}</span>
+                                <span>🔧 ${flexibility}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function formatTime(hour) {
+            const period = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+            return `${displayHour.toString().padStart(2, '0')}:00 ${period}`;
+        }
+
+        let userActivities = [];
+        let currentSchedule = null;
+        
+        function showScheduleInput() {
+            document.getElementById('scheduleInput').style.display = 'block';
+            document.getElementById('scheduleContent').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'none';
+        }
+        
+        function addActivity() {
+            const time = document.getElementById('activityTime').value;
+            const name = document.getElementById('activityName').value;
+            const duration = document.getElementById('activityDuration').value;
+            
+            if (!time || !name || !duration) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            const activity = {
+                id: Date.now(),
+                time: time,
+                activity: name,
+                duration: parseInt(duration),
+                type: 'user',
+                priority: 5,
+                flexible: true
+            };
+            
+            userActivities.push(activity);
+            renderUserActivities();
+            
+            // Clear form
+            document.getElementById('activityTime').value = '';
+            document.getElementById('activityName').value = '';
+            document.getElementById('activityDuration').value = '';
+            
+            // Show optimize button
+            document.getElementById('optimizeBtn').style.display = 'inline-block';
+        }
+        
+        function renderUserActivities() {
+            const container = document.getElementById('activitiesList');
+            
+            if (userActivities.length === 0) {
+                container.innerHTML = '<p style="color: #888;">No activities added yet</p>';
+                return;
+            }
+            
+            const sorted = userActivities.sort((a, b) => a.time.localeCompare(b.time));
+            
+            container.innerHTML = sorted.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-info">
+                        <div class="activity-time">${activity.time}</div>
+                        <div class="activity-name">${activity.activity}</div>
+                        <div class="activity-duration">${activity.duration} minutes</div>
+                    </div>
+                    <div class="activity-actions">
+                        <button class="btn-small btn-edit" onclick="editActivity(${activity.id})">Edit</button>
+                        <button class="btn-small btn-delete" onclick="deleteActivity(${activity.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function deleteActivity(id) {
+            userActivities = userActivities.filter(a => a.id !== id);
+            renderUserActivities();
+            
+            if (userActivities.length === 0) {
+                document.getElementById('optimizeBtn').style.display = 'none';
+            }
+        }
+        
+        function editActivity(id) {
+            const activity = userActivities.find(a => a.id === id);
+            if (!activity) return;
+            
+            const newName = prompt('Edit activity name:', activity.activity);
+            const newDuration = prompt('Edit duration (minutes):', activity.duration);
+            
+            if (newName && newDuration) {
+                activity.activity = newName;
+                activity.duration = parseInt(newDuration);
+                renderUserActivities();
+            }
+        }
+        
+        function loadTemplate(type) {
+            const templates = {
+                work: [
+                    { time: '07:00', activity: 'Morning Exercise', duration: 45 },
+                    { time: '08:00', activity: 'Breakfast', duration: 30 },
+                    { time: '09:00', activity: 'Deep Work Session', duration: 120 },
+                    { time: '12:00', activity: 'Lunch Break', duration: 60 },
+                    { time: '13:00', activity: 'Meetings', duration: 90 },
+                    { time: '15:00', activity: 'Project Work', duration: 120 },
+                    { time: '18:00', activity: 'Evening Workout', duration: 60 },
+                    { time: '20:00', activity: 'Dinner & Family Time', duration: 90 }
+                ],
+                weekend: [
+                    { time: '08:00', activity: 'Sleep In & Breakfast', duration: 90 },
+                    { time: '10:00', activity: 'Outdoor Activity', duration: 120 },
+                    { time: '13:00', activity: 'Lunch with Friends', duration: 90 },
+                    { time: '15:00', activity: 'Hobby Time', duration: 120 },
+                    { time: '18:00', activity: 'Cooking', duration: 60 },
+                    { time: '20:00', activity: 'Movie Night', duration: 120 }
+                ],
+                study: [
+                    { time: '06:00', activity: 'Morning Routine', duration: 60 },
+                    { time: '07:00', activity: 'Study Session 1', duration: 120 },
+                    { time: '10:00', activity: 'Break & Snack', duration: 30 },
+                    { time: '10:30', activity: 'Study Session 2', duration: 120 },
+                    { time: '13:00', activity: 'Lunch Break', duration: 60 },
+                    { time: '14:00', activity: 'Study Session 3', duration: 120 },
+                    { time: '17:00', activity: 'Exercise', duration: 60 },
+                    { time: '19:00', activity: 'Dinner', duration: 60 },
+                    { time: '20:00', activity: 'Review & Planning', duration: 60 }
+                ]
+            };
+            
+            userActivities = templates[type].map((item, index) => ({
+                id: Date.now() + index,
+                ...item,
+                type: 'user',
+                priority: 5,
+                flexible: true
+            }));
+            
+            renderUserActivities();
+            document.getElementById('optimizeBtn').style.display = 'inline-block';
+        }
+        
+        async function optimizeSchedule() {
+            if (userActivities.length === 0) {
+                alert('Please add some activities first');
+                return;
+            }
+            
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('scheduleInput').style.display = 'none';
+            
+            try {
+                // Send user schedule to AI for optimization
+                const response = await fetch(`${API_URL}/optimize-schedule`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userSchedule: userActivities })
+                });
+                
+                const data = await response.json();
+                currentSchedule = data;
+                displayOptimizedSchedule(data);
+            } catch (error) {
+                console.error('Error optimizing schedule:', error);
+                // Fallback to basic optimization
+                const optimized = basicOptimization(userActivities);
+                displayOptimizedSchedule(optimized);
+            }
+        }
+        
+        function basicOptimization(activities) {
+            // Simple client-side optimization as fallback
+            const optimized = [...activities];
+            
+            return {
+                date: new Date().toISOString().split('T')[0],
+                generatedAt: new Date(),
+                totalActivities: optimized.length,
+                schedule: optimized,
+                insights: {
+                    recommendations: [
+                        'Schedule looks good! Consider adding breaks between long activities.',
+                        'Try to balance work and personal time.',
+                        'Add some physical activity if missing.'
+                    ],
+                    workLifeBalance: 'Balanced'
+                },
+                balanceScore: 75
+            };
+        }
+        
+        function displayOptimizedSchedule(data) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('scheduleContent').style.display = 'block';
+            
+            // Make timeline items editable
+            displaySchedule(data);
+            makeScheduleEditable();
+        }
+        
+        function makeScheduleEditable() {
+            const timelineItems = document.querySelectorAll('.timeline-item');
+            timelineItems.forEach((item, index) => {
+                item.classList.add('editable');
+                item.onclick = () => editScheduleItem(index);
+            });
+        }
+        
+        function editScheduleItem(index) {
+            if (!currentSchedule) return;
+            
+            const item = currentSchedule.schedule[index];
+            const newActivity = prompt('Edit activity:', item.activity);
+            const newDuration = prompt('Edit duration (minutes):', item.duration);
+            
+            if (newActivity && newDuration) {
+                item.activity = newActivity;
+                item.duration = parseInt(newDuration);
+                displayOptimizedSchedule(currentSchedule);
+            }
+        }
+        
+        // Auto-show input on page load
+        window.onload = () => {
+            showScheduleInput();
+        };
+    </script>
+</body>
+</html>

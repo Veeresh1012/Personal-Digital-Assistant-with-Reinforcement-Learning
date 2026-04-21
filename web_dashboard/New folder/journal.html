@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mitra AI — Journal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="api.js"></script>
+<style>
+:root{ --ink:#1d2540; --muted:#5b6a8a; --accent:#1f6feb; }
+*{box-sizing:border-box}
+body{
+  margin:0;color:var(--ink);font-family:Inter,system-ui;
+  background: linear-gradient(#fafcff, #f1f6ff);
+  min-height:100vh; overflow-x:hidden;
+}
+header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,0.9); backdrop-filter:blur(8px); border-bottom:1px solid #e1e9ff}
+.wrap{max-width:1180px;margin:0 auto;padding:12px 14px}
+h1{margin:0;font-size:22px}
+.btn{background:var(--accent);color:white; padding: 10px 20px; border-radius: 8px; border:none; cursor: pointer;}
+.card{background:#ffffff;border:1px solid #e1e9ff;border-radius:16px;padding:20px;box-shadow:0 10px 30px rgba(13,30,80,.06)}
+textarea{width:100%; min-height:300px; padding:15px; border:1px solid #ccc; border-radius:8px; font-size:16px; margin-top:10px;}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap" style="display:flex;gap:12px;align-items:center">
+    <h1>📓 <b>Mitra AI — Journal</b></h1>
+    <div style="flex:1"></div>
+    <a href="index.html" style="text-decoration:none; color:#1f6feb;">Home</a>
+  </div>
+</header>
+
+<main class="wrap">
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2>Daily Entry</h2>
+            <button class="btn" id="saveBtn">Save to Cloud</button>
+        </div>
+        
+        <textarea id="content" placeholder="Type here OR go to Fitness page to use Voice commands..."></textarea>
+        <div id="status" style="margin-top:10px; color:#666;">Ready.</div>
+    </div>
+</main>
+
+<script>
+document.getElementById("saveBtn").onclick = async () => {
+    const text = document.getElementById("content").value;
+    if(!text) return;
+    
+    document.getElementById("status").textContent = "Saving to Firebase...";
+    
+    // Send to brain
+    const reply = await window.askAI("Log journal entry: " + text);
+    
+    document.getElementById("status").textContent = "✅ " + reply;
+    document.getElementById("content").value = "";
+};
+</script>
+</body>
+</html>

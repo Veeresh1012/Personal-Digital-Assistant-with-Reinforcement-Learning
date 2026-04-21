@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mitra AI — To-Do List (AI-Powered)</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="api.js"></script>
+
+    <style>
+        /* BEAUTIFUL PRODUCTIVITY BACKGROUND */
+        body {
+            margin: 0;
+            background: url("https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=1600&q=80")
+                no-repeat center center fixed;
+            background-size: cover;
+            font-family: "Poppins", sans-serif;
+        }
+
+        /* Soft dark overlay for readability */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(2px);
+            z-index: -1;
+        }
+
+        /* Title */
+        .todo-title {
+            text-align: center;
+            margin-top: 110px;
+            font-size: 2.4rem;
+            color: #00eaff;
+            text-shadow: 0 0 10px #00eaffaa;
+            font-weight: 600;
+        }
+
+        /* Main container */
+        .todo-box {
+            max-width: 650px;
+            margin: 30px auto;
+            padding: 28px;
+            border-radius: 16px;
+            background: rgba(0, 234, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid #00eaff40;
+            box-shadow: 0 0 25px #00eaff30;
+        }
+
+        /* AI Command Area */
+        .ai-command-area {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(0, 234, 255, 0.12);
+            border-radius: 12px;
+            border: 1px solid #00eaff50;
+        }
+        
+        .ai-command-area h3 {
+            margin: 0 0 15px 0;
+            color: #00eaff;
+            font-size: 1.1rem;
+        }
+        
+        .ai-input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .ai-input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 234, 255, 0.3);
+            background: rgba(0, 0, 0, 0.45);
+            color: white;
+            outline: none;
+            font-size: 1rem;
+        }
+        
+        .ai-btn {
+            padding: 12px 20px;
+            background: #00eaff;
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .ai-btn:hover {
+            background: #00ffff;
+        }
+        
+        .ai-response {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            color: #00eaff;
+            font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+            min-height: 40px;
+        }
+
+        /* Input area */
+        .todo-input-area {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .todo-input-area input {
+            flex: 1;
+            padding: 14px;
+            border-radius: 10px 0 0 10px;
+            border: none;
+            background: rgba(0, 0, 0, 0.45);
+            color: white;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .add-btn {
+            width: 60px;
+            border: none;
+            border-radius: 0 10px 10px 0;
+            background: #00eaff;
+            color: #000;
+            font-size: 1.6rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .add-btn:hover {
+            background: #00ffff;
+        }
+
+        /* Task List */
+        .task-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .task-item {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid #00eaff50;
+            padding: 14px 16px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.25s;
+        }
+
+        .task-item:hover {
+            transform: translateX(6px);
+            box-shadow: 0 0 15px #00eaff60;
+        }
+
+        /* Completed task */
+        .done {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+        
+        /* Priority badges */
+        .priority-badge {
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            border-radius: 999px;
+            margin-left: 10px;
+        }
+        
+        .priority-high {
+            background: #ff4d4d;
+            color: white;
+        }
+        
+        .priority-medium {
+            background: #ffd700;
+            color: #000;
+        }
+        
+        .priority-low {
+            background: #4dff4d;
+            color: #000;
+        }
+
+        /* Buttons inside each task */
+        .task-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .done-btn, .del-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.3rem;
+        }
+
+        .done-btn {
+            color: #00eaff;
+        }
+
+        .done-btn:hover {
+            color: #00ffff;
+        }
+
+        .del-btn {
+            color: #ff4d4d;
+        }
+
+        .del-btn:hover {
+            color: #ff1a1a;
+        }
+
+        /* Back button */
+        .back-btn {
+            display: block;
+            width: fit-content;
+            margin: 20px auto;
+            color: #00eaff;
+            text-decoration: none;
+            font-size: 1.1rem;
+        }
+
+        .back-btn:hover {
+            color: #00ffff;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #00eaff;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2 class="todo-title">Mitra AI — To-Do Manager (Cloud-Synced)</h2>
+
+<div class="todo-box">
+    
+    <!-- AI Command Area -->
+    <div class="ai-command-area">
+        <h3>🤖 AI Commands</h3>
+        <div class="ai-input-row">
+            <input id="ai-input" class="ai-input" type="text" placeholder='Say: "Add task buy milk", "Create todo finish report", "High priority meeting"'>
+            <button id="ai-send" class="ai-btn">Send</button>
+            <button id="ai-voice" class="ai-btn">🎙️</button>
+        </div>
+        <div id="ai-response" class="ai-response">Task Commands: "Add task [item]", "Create todo [task]", "High/Medium/Low priority [task]"</div>
+    </div>
+
+    <!-- Manual Task Input -->
+    <div class="todo-input-area">
+        <input id="task-input" type="text" placeholder="Or manually add a task..." />
+        <button class="add-btn" onclick="addTaskManually()">+</button>
+    </div>
+
+    <ul id="task-list" class="task-list">
+        <li class="loading">Loading tasks from cloud...</li>
+    </ul>
+</div>
+
+<a class="back-btn" href="index.html">← Back to Dashboard</a>
+
+<script>
+// NOTE: We'll load tasks from Firebase via API, not localStorage!
+
+let tasks = [];
+let recognition = null;
+let isListening = false;
+
+// Load tasks from Firebase
+async function loadTasks() {
+    try {
+        // We need to fetch from Firebase
+        // For now, we'll check if AI has added any tasks
+        const listEl = document.getElementById('task-list');
+        listEl.innerHTML = '<li class="loading">No tasks yet. Use AI to add tasks!</li>';
+        
+        // You can implement a GET endpoint in backend to fetch tasks
+        // For now, tasks will appear after using AI commands
+    } catch (error) {
+        console.error('Error loading tasks:', error);
+    }
+}
+
+// Render tasks (when we have them)
+function renderTasks() {
+    const list = document.getElementById("task-list");
+    
+    if (!tasks || tasks.length === 0) {
+        list.innerHTML = '<li class="loading">No tasks yet. Add one using AI or manual input!</li>';
+        return;
+    }
+    
+    list.innerHTML = "";
+
+    tasks.forEach((task, i) => {
+        const li = document.createElement("li");
+        li.className = "task-item";
+
+        if (task.done || task.completed) li.classList.add("done");
+
+        const priorityClass = task.priority === 'high' ? 'priority-high' : 
+                             task.priority === 'medium' ? 'priority-medium' : 
+                             'priority-low';
+        
+        const priorityBadge = task.priority ? 
+            `<span class="priority-badge ${priorityClass}">${task.priority}</span>` : '';
+
+        li.innerHTML = `
+            <span>${task.text || task.task}${priorityBadge}</span>
+            <div class="task-actions">
+                <button class="done-btn" onclick="toggleTask(${i})">✓</button>
+                <button class="del-btn" onclick="deleteTask(${i})">🗑</button>
+            </div>
+        `;
+        list.appendChild(li);
+    });
+}
+
+// Handle AI Commands
+async function handleAICommand(text) {
+    if (!text.trim()) return;
+    
+    const responseEl = document.getElementById('ai-response');
+    responseEl.textContent = '🤔 Processing...';
+    
+    try {
+        const reply = await window.askAI(text);
+        responseEl.textContent = reply;
+        
+        // If task was added successfully, refresh the view
+        if (reply.includes('Task added') || reply.includes('added')) {
+            // Add to local tasks array for display
+            const taskText = text.replace(/add|task|todo|to-do|my|todos/gi, '').trim();
+            const priority = text.toLowerCase().includes('high') ? 'high' : 
+                           text.toLowerCase().includes('low') ? 'low' : 'medium';
+            
+            tasks.push({
+                text: taskText,
+                priority: priority,
+                done: false,
+                timestamp: new Date()
+            });
+            
+            renderTasks();
+        }
+    } catch (error) {
+        responseEl.textContent = '❌ Error: ' + error.message;
+    }
+}
+
+// Manual task addition
+function addTaskManually() {
+    const input = document.getElementById("task-input");
+    const value = input.value.trim();
+    if (!value) return;
+
+    // Send to AI backend
+    handleAICommand(`Add task: ${value}`);
+    input.value = "";
+}
+
+// Toggle task completion
+function toggleTask(i) {
+    tasks[i].done = !tasks[i].done;
+    renderTasks();
+    // TODO: Update in Firebase via API
+}
+
+// Delete task
+function deleteTask(i) {
+    tasks.splice(i, 1);
+    renderTasks();
+    // TODO: Delete from Firebase via API
+}
+
+// Voice Recognition
+function initVoice() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+        alert('Speech recognition not supported. Use Chrome or Edge.');
+        return null;
+    }
+    
+    recognition = new SR();
+    recognition.lang = 'en-IN';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('ai-input').value = transcript;
+        handleAICommand(transcript);
+    };
+    
+    return recognition;
+}
+
+// Event Listeners
+document.getElementById('ai-send').onclick = () => {
+    handleAICommand(document.getElementById('ai-input').value);
+};
+
+document.getElementById('ai-input').onkeypress = (e) => {
+    if (e.key === 'Enter') {
+        handleAICommand(document.getElementById('ai-input').value);
+    }
+};
+
+document.getElementById('ai-voice').onclick = () => {
+    if (!recognition) recognition = initVoice();
+    if (recognition) recognition.start();
+};
+
+// Initialize
+loadTasks();
+renderTasks();
+</script>
+
+</body>
+</html>
